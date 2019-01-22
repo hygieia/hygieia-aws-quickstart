@@ -1,0 +1,89 @@
+Description:                       "Hygieia Quickstart - DocumentDB Template"
+
+Parameters:
+  DBClusterName:
+    Default:                       "Hygieia-Quickstart"
+    Description :                  "Cluster name"
+    Type:                          "String"
+    MinLength:                     "1"
+    MaxLength:                     "64"
+    AllowedPattern :               "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
+    ConstraintDescription :        "Must begin with a letter and contain only alphanumeric characters."
+
+  MasterUser:
+    NoEcho:                        "true"
+    Description :                  "The database admin account username"
+    Type:                          "String"
+    MinLength:                     "1"
+    MaxLength:                     "16"
+    AllowedPattern:                "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription :        "Must begin with a letter and contain only alphanumeric characters."
+
+  MasterPassword:
+    NoEcho:                        "true"
+    Description :                  "The database admin account password"
+    Type:                          "String"
+    MinLength:                     "1"
+    MaxLength:                     "41"
+    AllowedPattern :               "[a-zA-Z0-9]+"
+    ConstraintDescription :        "must contain only alphanumeric characters."
+
+  SubnetIds:
+    Description:                   "List of subnets to create DBSubnetGroup from"
+    Type:                          "CommaDelimitedList"
+
+Resources:
+  DBClusterParameterGroup:
+    Type:                          "AWS::DocDB::DBClusterParameterGroup"
+    Properties:
+      Description:                 "Parameter group with TLS disabled"
+      Family:                      "docdb3.6"
+      Parameters:
+        tls:                       "disabled"
+      Tags:
+        - Name:                    "docdb3.6-no-tls"
+
+  DBSubnetGroup:
+    Type:                          "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription:    "Hygieia DocumentDB subnet group"
+      DBSubnetGroupName:           "hygieia-quickstart-dbsubnetgroup"
+      SubnetIds:                   !Ref SubnetIds
+
+  DBCluster:
+    Type:                          "AWS::DocDB::DBCluster"
+    DeletionPolicy:                Delete
+    Properties:
+      DBClusterParameterGroupName: !Ref DBClusterParameterGroup
+      DBClusterIdentifier:         !Ref DBClusterName
+      DBSubnetGroupName:           !Ref DBSubnetGroup
+      MasterUsername:              !Ref MasterUser
+      MasterUserPassword:          !Ref MasterPassword
+    DependsOn:
+      - DBSubnetGroup
+      - DBClusterParameterGroup
+
+  DBInstance:
+    Type:                          "AWS::DocDB::DBInstance"
+    Properties:
+      DBClusterIdentifier:         !Ref DBCluster
+      DBInstanceIdentifier:        !Join ["-", [!Ref DBClusterName, "InstanceName"] ]
+      DBInstanceClass:             "db.r4.large"
+    DependsOn:
+      - DBCluster
+
+Outputs:
+  ClusterId:
+    Value:                         !Ref DBCluster
+  ClusterEndpoint:
+    Value:                         !GetAtt DBCluster.Endpoint
+  ClusterReadEndpoint:
+    Value:                         !GetAtt DBCluster.ReadEndpoint
+  ClusterPort:
+    Value:                         !GetAtt DBCluster.Port
+  InstanceId:
+    Value:                         !Ref DBInstance
+  InstancePort:
+    Value:                         !GetAtt DBInstance.Port
+  InstanceEndpoint:
+    Value:                         !GetAtt DBInstance.Endpoint
