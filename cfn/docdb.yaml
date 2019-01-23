@@ -32,6 +32,10 @@ Parameters:
     Description:                   "List of subnets to create DBSubnetGroup from"
     Type:                          "CommaDelimitedList"
 
+  VpcSecurityGroupIds:
+    Description:                   "List of security group IDs to use with the DocumentDB"
+    Type:                          "CommaDelimitedList"
+
 Resources:
   DBClusterParameterGroup:
     Type:                          "AWS::DocDB::DBClusterParameterGroup"
@@ -41,7 +45,9 @@ Resources:
       Parameters:
         tls:                       "disabled"
       Tags:
-        - Name:                    "docdb3.6-no-tls"
+        -
+          Key:                     "Name"
+          Value:                   "docdb3.6-no-tls"
 
   DBSubnetGroup:
     Type:                          "AWS::RDS::DBSubnetGroup"
@@ -59,6 +65,7 @@ Resources:
       DBSubnetGroupName:           !Ref DBSubnetGroup
       MasterUsername:              !Ref MasterUser
       MasterUserPassword:          !Ref MasterPassword
+      VpcSecurityGroupIds:         !Ref VpcSecurityGroupIds
     DependsOn:
       - DBSubnetGroup
       - DBClusterParameterGroup
