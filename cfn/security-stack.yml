@@ -1,0 +1,153 @@
+Description:                     "Hygieia-Quickstart - Security Stack"
+
+Parameters:
+  ServiceName:
+    Description :                "The service name"
+    Type:                        "String"
+    MinLength:                   "1"
+    MaxLength:                   "64"
+    AllowedPattern :             "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
+    ConstraintDescription :      "Must begin with a letter and contain only alphanumeric characters."
+
+  VpcId:
+    Type:                        "AWS::EC2::VPC::Id"
+
+Resources:
+  # A role needed by ECS
+  ExecutionRole:
+    Type:                        AWS::IAM::Role
+    Properties:
+      RoleName:                  !Sub "${ServiceName}ExecutionRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect:              "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+                - "ecs.amazonaws.com"
+                - "ec2.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole'
+
+  # A role for the containers
+  TaskRole:
+    Type:                        AWS::IAM::Role
+    Properties:
+      RoleName:                  !Sub "${ServiceName}TaskRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          -
+            Effect:              "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+     # ManagedPolicyArns:
+     #   -
+     # Policies:
+     #   -
+
+  # A role needed for auto scaling
+  AutoScalingRole:
+    Type:                        AWS::IAM::Role
+    Properties:
+      RoleName:                  !Sub "${ServiceName}AutoScalingRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          -
+            Effect:              "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
+
+  UiContainerSG:
+    Type:                        AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:                 !Sub "${ServiceName}-UiContainerSG"
+      GroupDescription:          "Allows inbound 80 from UiLoadBalancerSG"
+      SecurityGroupIngress:
+        - IpProtocol:            tcp
+          FromPort:              80
+          ToPort:                80
+          SourceSecurityGroupId: !Sub "${UiLoadBalancerSG.GroupId}"
+      VpcId:                     !Ref VpcId
+
+  ApiContainerSG:
+    Type:                        AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:                 !Sub "${ServiceName}-ApiContainerSG"
+      GroupDescription:          "Allows inbound 8080 from ApiLoadBalancerSG"
+      SecurityGroupIngress:
+        - IpProtocol:            tcp
+          FromPort:              8080
+          ToPort:                8080
+          SourceSecurityGroupId: !Sub "${ApiLoadBalancerSG.GroupId}"
+      VpcId:                     !Ref VpcId
+
+  ApiAndDBSG:
+    Type:                        AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:                 !Sub "${ServiceName}-Api-and-DBSG"
+      GroupDescription:          "Allows inbound 27017 from self.GroupId"
+      VpcId:                     !Ref VpcId
+
+  ApiAndDBSGIngress:
+    Type:                        "AWS::EC2::SecurityGroupIngress"
+    DependsOn:                   ApiAndDBSG
+    Properties:
+      GroupId:                   !Sub "${ApiAndDBSG.GroupId}"
+      IpProtocol:                "tcp"
+      FromPort:                  27017
+      ToPort:                    27017
+      SourceSecurityGroupId:     !Sub "${ApiAndDBSG.GroupId}"
+
+  UiLoadBalancerSG:
+    Type:                        AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:                 !Sub "${ServiceName}-UiLoadBalancerSG"
+      GroupDescription:          "Allows inbound 80 from anywhere"
+      SecurityGroupIngress:
+        - IpProtocol:            tcp
+          FromPort:              80
+          ToPort:                80
+          CidrIp:                "0.0.0.0/0"
+      VpcId:                     !Ref VpcId
+
+  ApiLoadBalancerSG:
+    Type:                        AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:                 !Sub "${ServiceName}-ApiLoadBalancerSG"
+      GroupDescription:          "Allows inbound 8080 from anywhere" #TODO lock down to just UiContainer"
+      SecurityGroupIngress:
+        - IpProtocol:            tcp
+          FromPort:              8080
+          ToPort:                8080
+          CidrIp:                "0.0.0.0/0"
+          # SourceSecurityGroupId: !Sub "${UiContainerSG.GroupId}"
+      VpcId:                     !Ref VpcId
+
+Outputs:
+  ExecutionRoleArn:
+    Value:                       !GetAtt ExecutionRole.Arn
+  TaskRoleArn:
+    Value:                       !GetAtt TaskRole.Arn
+  AutoScalingRoleArn:
+    Value:                       !GetAtt AutoScalingRole.Arn
+  ApiLoadBalancerSG:
+    Value:                       !GetAtt ApiLoadBalancerSG.GroupId
+  ApiContainerSG:
+    Value:                       !GetAtt ApiContainerSG.GroupId
+  UiLoadBalancerSG:
+    Value:                       !GetAtt UiLoadBalancerSG.GroupId
+  UiContainerSG:
+    Value:                       !GetAtt UiContainerSG.GroupId
+  ApiAndDBSG:
+    Value:                       !GetAtt ApiAndDBSG.GroupId

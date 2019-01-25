@@ -1,0 +1,170 @@
+Description:                 'Hygieia-Quickstart'
+
+Parameters:
+  DBInstanceClass:
+    Description:             "The database instance type"
+    Type:                    "String"
+    AllowedValues:
+      - "db.r4.large"
+      - "db.r4.xlarge"
+      - "db.r4.2xlarge"
+      - "db.r4.4xlarge"
+      - "db.r4.8xlarge"
+      - "db.r4.16xlarge"
+    Default:                 "db.r4.large"
+
+  TemplatePath:
+    Type:                    String
+    Description:             S3Bucket Path where the templates are stored
+    Default:                 "hygieia-quickstart"
+
+  VpcId:
+    Type:                    "AWS::EC2::VPC::Id"
+    Description:             Enter a valid VPC Id
+
+  ServiceName:
+    Default:                 "Hygieia"
+    Description :            "The service name"
+    Type:                    "String"
+    MinLength:               "1"
+    MaxLength:               "64"
+    AllowedPattern :         "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
+    ConstraintDescription :  "Must begin with a letter and contain only alphanumeric characters."
+
+  MasterUser:
+    NoEcho:                  "true"
+    Description :            "The database admin account username"
+    Type:                    "String"
+    MinLength:               "1"
+    MaxLength:               "16"
+    AllowedPattern:          "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription :  "Must begin with a letter and contain only alphanumeric characters."
+
+  MasterPassword:
+    NoEcho:                  "true"
+    Description :            "The database admin account password"
+    Type:                    "String"
+    MinLength:               "1"
+    MaxLength:               "41"
+    AllowedPattern :         "[a-zA-Z0-9]+"
+    ConstraintDescription :  "must contain only alphanumeric characters."
+
+  SubnetA:
+    Type:                    "AWS::EC2::Subnet::Id"
+    Description:             Enter a valid SubnetId of subnet in AZ1
+
+  SubnetB:
+    Type:                    "AWS::EC2::Subnet::Id"
+    Description:             Enter a valid SubnetId of subnet in AZ2
+
+  ApiContainerCpu:
+    Type:                    "Number"
+    Default:                 256
+
+  ApiContainerMemory:
+    Type:                    "String"
+    Description:             "The size of allocated container memory (Gb)"
+    Default:                 "2GB"
+
+  ApiContainerImage:
+    Type:                    "String"
+    Default:                 "singlestone/hygieia-api:0.1.0"
+
+  ApiContainerPort:
+    Type:                    "Number"
+    Default:                 8080
+
+  ApiHealthCheckPath:
+    Type:                    "String"
+    Default:                 "/api/ping"
+
+  UiContainerCpu:
+    Type:                    "Number"
+    Default:                 256
+
+  UiContainerMemory:
+    Type:                    "String"
+    Description:             "The size of allocated container memory (Gb)"
+    Default:                 "1GB"
+
+  UiContainerImage:
+    Type:                    "String"
+    Default:                 "singlestone/hygieia-ui:0.1.0"
+
+  UiContainerPort:
+    Type:                    "Number"
+    Default:                 80
+
+  UiHealthCheckPath:
+    Type:                    "String"
+    Default:                 "/"
+
+Resources:
+  SecurityStack:
+    Type:                    "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:           !Sub "https://s3.amazonaws.com/${TemplatePath}/security-stack.yml"
+      Parameters:
+        ServiceName:         !Ref ServiceName
+        VpcId:               !Ref VpcId
+      Tags:
+        - Key:               Name
+          Value:             !Join [ "-", [ !Ref ServiceName, "Security-Stack" ] ]
+
+  DatabaseStack:
+    Type:                    "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:           !Sub "https://s3.amazonaws.com/${TemplatePath}/database-stack.yml"
+      Parameters:
+        DBInstanceClass:     !Ref DBInstanceClass
+        ServiceName:         !Ref ServiceName
+        MasterUser:          !Ref MasterUser
+        MasterPassword:      !Ref MasterPassword
+        SubnetIds:           !Sub "${SubnetA},${SubnetB}"
+        VpcSecurityGroupIds: !GetAtt SecurityStack.Outputs.ApiAndDBSG
+      Tags:
+        - Key:               Name
+          Value:             !Join [ "-", [ !Ref ServiceName, "Database-Stack" ] ]
+
+  AppStack:
+    Type:                    "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:           !Sub "https://s3.amazonaws.com/${TemplatePath}/app-stack.yml"
+      Parameters:
+        ApiContainerCpu:     !Ref ApiContainerCpu
+        ApiContainerMemory:  !Ref ApiContainerMemory
+        ApiContainerImage:   !Ref ApiContainerImage
+        ApiContainerPort:    !Ref ApiContainerPort
+        ApiHealthCheckPath:  !Ref ApiHealthCheckPath
+        UiContainerCpu:      !Ref UiContainerCpu
+        UiContainerMemory:   !Ref UiContainerMemory
+        UiContainerImage:    !Ref UiContainerImage
+        UiContainerPort:     !Ref UiContainerPort
+        UiHealthCheckPath:   !Ref UiHealthCheckPath
+        VpcId:               !Ref VpcId
+        SubnetA:             !Ref SubnetA
+        SubnetB:             !Ref SubnetB
+        ServiceName:         !Ref ServiceName
+        ApiLoadBalancerSG:   !Sub "${SecurityStack.Outputs.ApiLoadBalancerSG}"
+        ApiContainerSG:      !Sub "${SecurityStack.Outputs.ApiContainerSG}"
+        UiLoadBalancerSG:    !Sub "${SecurityStack.Outputs.UiLoadBalancerSG}"
+        UiContainerSG:       !Sub "${SecurityStack.Outputs.UiContainerSG}"
+        DBClusterEndpoint:   !Sub "${DatabaseStack.Outputs.ClusterEndpoint}"
+        AutoScalingRole:     !Sub "${SecurityStack.Outputs.AutoScalingRoleArn}"
+        TaskRole:            !Sub "${SecurityStack.Outputs.TaskRoleArn}"
+        ExecutionRole:       !Sub "${SecurityStack.Outputs.ExecutionRoleArn}"
+        ApiAndDBSG:          !Sub "${SecurityStack.Outputs.ApiAndDBSG}"
+        MasterUser:          !Ref MasterUser
+        MasterPassword:      !Ref MasterPassword
+      Tags:
+        - Key:               Name
+          Value:             !Join [ "-", [ !Ref ServiceName, "App-Stack" ] ]
+
+Outputs:
+  UiLoadBalancerUrl:
+    Description:             "URL endpoint of the UI ALB"
+    Value:                   !GetAtt AppStack.Outputs.UiLoadBalancerUrl
+
+  ApiLoadBalancerUrl:
+    Description:             "URL endpoint of the API ALB"
+    Value:                   !GetAtt AppStack.Outputs.ApiLoadBalancerUrl
