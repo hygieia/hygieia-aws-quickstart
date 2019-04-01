@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+
+STACK_NAME=Hygieia-Quickstart
+S3_BUCKET=hygieia-quckstart
+DEPLOY_TEMPLATE=deploy.yml
+PARAMS_FILE=params.json
+
+CMD=$(cat <<EOF
+aws cloudformation deploy                 \
+  --s3-bucket $S3_BUCKET                  \
+  --region $AWS_REGION                    \
+  --template-file $DEPLOY_TEMPLATE        \
+  --stack-name $STACK_NAME                \
+  --capabilities CAPABILITY_NAMED_IAM     \
+  --parameter-overrides                   \
+  $(cat deploy.properties)
+EOF
+)
+
+echo $CMD
+
+eval $CMD

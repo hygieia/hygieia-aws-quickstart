@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+STACK_NAME=Hygieia-Quickstart
+
+CMD=$(cat <<EOF
+aws cloudformation delete-stack --stack-name $STACK_NAME
+EOF
+)
+
+echo $CMD
+
+eval $CMD
