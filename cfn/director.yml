@@ -1,170 +1,321 @@
-Description:                 'Hygieia-Quickstart'
+Description:                         'Hygieia-Quickstart'
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default:                   "Network Configuration"
+        Parameters:
+          - VpcId
+          - SubnetA
+          - SubnetB
+      -
+        Label:
+          default:                   "Service Configuration"
+        Parameters:
+          - ClusterName
+          - DatabaseUserName
+          - DatabasePassword
+    ParameterLabels:
+      VpcId:
+        default:                     "Which VPC should this be deployed to?"
+      SubnetA:
+        default:                     "Select first Subnet in first AZ"
+      SubnetB:
+        default:                     "Select second Subnet in second AZ"
+      ClusterName:
+        default:                     "ECS Cluster Name"
 
 Parameters:
-  DBInstanceClass:
-    Description:             "The database instance type"
-    Type:                    "String"
-    AllowedValues:
-      - "db.r4.large"
-      - "db.r4.xlarge"
-      - "db.r4.2xlarge"
-      - "db.r4.4xlarge"
-      - "db.r4.8xlarge"
-      - "db.r4.16xlarge"
-    Default:                 "db.r4.large"
-
-  TemplatePath:
-    Type:                    String
-    Description:             S3Bucket Path where the templates are stored
-    Default:                 "hygieia-quickstart"
-
   VpcId:
-    Type:                    "AWS::EC2::VPC::Id"
-    Description:             Enter a valid VPC Id
-
-  ServiceName:
-    Default:                 "Hygieia"
-    Description :            "The service name"
-    Type:                    "String"
-    MinLength:               "1"
-    MaxLength:               "64"
-    AllowedPattern :         "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
-    ConstraintDescription :  "Must begin with a letter and contain only alphanumeric characters."
-
-  MasterUser:
-    NoEcho:                  "true"
-    Description :            "The database admin account username"
-    Type:                    "String"
-    MinLength:               "1"
-    MaxLength:               "16"
-    AllowedPattern:          "[a-zA-Z][a-zA-Z0-9]*"
-    ConstraintDescription :  "Must begin with a letter and contain only alphanumeric characters."
-
-  MasterPassword:
-    NoEcho:                  "true"
-    Description :            "The database admin account password"
-    Type:                    "String"
-    MinLength:               "1"
-    MaxLength:               "41"
-    AllowedPattern :         "[a-zA-Z0-9]+"
-    ConstraintDescription :  "must contain only alphanumeric characters."
-
+    Type:                            "AWS::EC2::VPC::Id"
+    Description:                     Enter a valid VPC Id
+  ClusterName:
+    Description:                     "The cluster name"
+    Type:                            "String"
+    MinLength:                       "1"
+    MaxLength:                       "64"
+    AllowedPattern:                  "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
+    ConstraintDescription:           "Must begin with a letter and contain only alphanumeric characters."
+  DatabaseUsername:
+    AllowedPattern:                  "[a-zA-Z0-9]+"
+    ConstraintDescription:           must contain only alphanumeric characters.
+    Description:                     The database admin account user name.
+    MaxLength:                       '16'
+    MinLength:                       '1'
+    Type:                            String
+  DatabasePassword:
+    AllowedPattern:                  "^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)"
+    ConstraintDescription:           Must contain only alphanumeric characters with at least one capital letter and one number.
+    Description:                     The database admin account password.
+    MaxLength:                       '41'
+    MinLength:                       '8'
+    NoEcho:                          'true'
+    Type:                            String
+  DatabaseName:
+    AllowedPattern:                  "[a-zA-Z0-9]+"
+    ConstraintDescription:           must contain only alphanumeric characters.
+    Description:                     The database name.
+    MaxLength:                       '64'
+    MinLength:                       '1'
+    Type:                            String
   SubnetA:
-    Type:                    "AWS::EC2::Subnet::Id"
-    Description:             Enter a valid SubnetId of subnet in AZ1
-
+    Type:                            "AWS::EC2::Subnet::Id"
+    Description:                     Enter a valid SubnetId of subnet in AZ1
   SubnetB:
-    Type:                    "AWS::EC2::Subnet::Id"
-    Description:             Enter a valid SubnetId of subnet in AZ2
-
-  ApiContainerCpu:
-    Type:                    "Number"
-    Default:                 256
-
-  ApiContainerMemory:
-    Type:                    "String"
-    Description:             "The size of allocated container memory (Gb)"
-    Default:                 "2GB"
-
-  ApiContainerImage:
-    Type:                    "String"
-    Default:                 "singlestone/hygieia-api:0.1.0"
-
-  ApiContainerPort:
-    Type:                    "Number"
-    Default:                 8080
-
-  ApiHealthCheckPath:
-    Type:                    "String"
-    Default:                 "/api/ping"
-
-  UiContainerCpu:
-    Type:                    "Number"
-    Default:                 256
-
-  UiContainerMemory:
-    Type:                    "String"
-    Description:             "The size of allocated container memory (Gb)"
-    Default:                 "1GB"
-
-  UiContainerImage:
-    Type:                    "String"
-    Default:                 "singlestone/hygieia-ui:0.1.0"
-
-  UiContainerPort:
-    Type:                    "Number"
-    Default:                 80
-
-  UiHealthCheckPath:
-    Type:                    "String"
-    Default:                 "/"
+    Type:                            "AWS::EC2::Subnet::Id"
+    Description:                     Enter a valid SubnetId of subnet in AZ2
 
 Resources:
   SecurityStack:
-    Type:                    "AWS::CloudFormation::Stack"
+    Type:                            "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL:           !Sub "https://s3.amazonaws.com/${TemplatePath}/security-stack.yml"
+      TemplateURL:                   "security-stack.yml"
       Parameters:
-        ServiceName:         !Ref ServiceName
-        VpcId:               !Ref VpcId
+        ServiceName:                 !Ref ClusterName
+        VpcId:                       !Ref VpcId
       Tags:
-        - Key:               Name
-          Value:             !Join [ "-", [ !Ref ServiceName, "Security-Stack" ] ]
+        - Key:                       Name
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "Security"
 
-  DatabaseStack:
-    Type:                    "AWS::CloudFormation::Stack"
+  EcsCluster:
+    Type:                            "AWS::ECS::Cluster"
     Properties:
-      TemplateURL:           !Sub "https://s3.amazonaws.com/${TemplatePath}/database-stack.yml"
-      Parameters:
-        DBInstanceClass:     !Ref DBInstanceClass
-        ServiceName:         !Ref ServiceName
-        MasterUser:          !Ref MasterUser
-        MasterPassword:      !Ref MasterPassword
-        SubnetIds:           !Sub "${SubnetA},${SubnetB}"
-        VpcSecurityGroupIds: !GetAtt SecurityStack.Outputs.ApiAndDBSG
-      Tags:
-        - Key:               Name
-          Value:             !Join [ "-", [ !Ref ServiceName, "Database-Stack" ] ]
+      ClusterName:                   !Ref ClusterName
+    DependsOn:
+      - SecurityStack
 
-  AppStack:
-    Type:                    "AWS::CloudFormation::Stack"
+  ServiceDiscoveryNamespace:
+    Type:                            "AWS::ServiceDiscovery::PrivateDnsNamespace"
     Properties:
-      TemplateURL:           !Sub "https://s3.amazonaws.com/${TemplatePath}/app-stack.yml"
-      Parameters:
-        ApiContainerCpu:     !Ref ApiContainerCpu
-        ApiContainerMemory:  !Ref ApiContainerMemory
-        ApiContainerImage:   !Ref ApiContainerImage
-        ApiContainerPort:    !Ref ApiContainerPort
-        ApiHealthCheckPath:  !Ref ApiHealthCheckPath
-        UiContainerCpu:      !Ref UiContainerCpu
-        UiContainerMemory:   !Ref UiContainerMemory
-        UiContainerImage:    !Ref UiContainerImage
-        UiContainerPort:     !Ref UiContainerPort
-        UiHealthCheckPath:   !Ref UiHealthCheckPath
-        VpcId:               !Ref VpcId
-        SubnetA:             !Ref SubnetA
-        SubnetB:             !Ref SubnetB
-        ServiceName:         !Ref ServiceName
-        ApiLoadBalancerSG:   !Sub "${SecurityStack.Outputs.ApiLoadBalancerSG}"
-        ApiContainerSG:      !Sub "${SecurityStack.Outputs.ApiContainerSG}"
-        UiLoadBalancerSG:    !Sub "${SecurityStack.Outputs.UiLoadBalancerSG}"
-        UiContainerSG:       !Sub "${SecurityStack.Outputs.UiContainerSG}"
-        DBClusterEndpoint:   !Sub "${DatabaseStack.Outputs.ClusterEndpoint}"
-        AutoScalingRole:     !Sub "${SecurityStack.Outputs.AutoScalingRoleArn}"
-        TaskRole:            !Sub "${SecurityStack.Outputs.TaskRoleArn}"
-        ExecutionRole:       !Sub "${SecurityStack.Outputs.ExecutionRoleArn}"
-        ApiAndDBSG:          !Sub "${SecurityStack.Outputs.ApiAndDBSG}"
-        MasterUser:          !Ref MasterUser
-        MasterPassword:      !Ref MasterPassword
-      Tags:
-        - Key:               Name
-          Value:             !Join [ "-", [ !Ref ServiceName, "App-Stack" ] ]
+      Vpc:                           !Ref VpcId
+      Name:                          "local"
 
+  MongoDBService:
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "fargate-micro-service.yml"
+      Tags:
+        - Key:                       Name
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "MongoDB"
+      Parameters:
+        ServiceName:                 "MongoDB"
+        EcsCluster:                  !Ref EcsCluster
+        CreateLoadBalancerResources: "false"
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "2048"
+        ContainerMemory:             "4GB"
+        ContainerImage:              "excellalabs/mongo"
+        ContainerPort:               "27017"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        Env1:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_APPLICATION_DATABASE"
+              - !Ref DatabaseName
+        Env2:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_ADMIN_PASS"
+              - !Ref DatabasePassword
+        Env3:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_APPLICATION_USER"
+              - !Ref DatabaseUsername
+        Env4:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_APPLICATION_PASS"
+              - !Ref DatabasePassword
+
+  UiService:
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "fargate-micro-service.yml"
+      Tags:
+        - Key:                       Name
+          Value:
+            Fn::Sub:
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "Ui"
+      Parameters:
+        ServiceName:                 "Ui"
+        EcsCluster:                  !Ref EcsCluster
+        CreateLoadBalancerResources: "true"
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "512"
+        ContainerMemory:             "2GB"
+        ContainerImage:              "singlestone/hygieia-ui:0.1.0"
+        ContainerPort:               "80"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        HealthCheckPath:             "/"
+        Env1:
+          Fn::Join:
+            - "="
+            - - "API_HOST"
+              - "api.local"
+        Env2:
+          Fn::Join:
+            - "="
+            - - "API_PORT"
+              - "8080"
+    DependsOn:
+      - EcsCluster
+
+  ApiService:
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "fargate-micro-service.yml"
+      Tags:
+        - Key:                       Name
+          Value:
+            Fn::Sub:
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "API"
+      Parameters:
+        ServiceName:                 "API"
+        EcsCluster:                  !Ref EcsCluster
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        CreateLoadBalancerResources: "false"
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "1024"
+        ContainerMemory:             "2GB"
+        ContainerImage:              "singlestone/hygieia-api:0.1.0"
+        ContainerPort:               "8080"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        HealthCheckPath:             "/api/appinfo"
+        Env1:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_HOST"
+              - "mongodb.local"
+        Env2:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_PORT"
+              - "27017"
+        Env3:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_USERNAME"
+              - !Ref DatabaseUsername
+        Env4:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_PASSWORD"
+              - !Ref DatabasePassword
+        Env5:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_DATABASE"
+              - !Ref DatabaseName
+
+  JenkinsCollector:
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "fargate-micro-service.yml"
+      Tags:
+        - Key:                       Name
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "JenkinsCollector"
+      Parameters:
+        ServiceName:                 "JenkinsCollector"
+        EcsCluster:                  !Ref EcsCluster
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        CreateLoadBalancerResources: "false"
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "256"
+        ContainerMemory:             "1GB"
+        ContainerImage:              "singlestone/hygieia-jenkins-collector:0.1.0"
+        ContainerPort:               "8080"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        Env1:
+          'Fn::Join':
+            - "="
+            - - "MONGO_PORT"
+              - "tcp://mongodb.local:27017"
+        Env2:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_USERNAME"
+              - !Ref DatabaseUsername
+        Env3:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_PASSWORD"
+              - !Ref DatabasePassword
+        Env4:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_DATABASE"
+              - !Ref DatabaseName
+        Env5:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_CRON"
+              - "0 * * * * *"
+        Env6:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_MASTER"
+              - "http://ec2-3-90-203-181.compute-1.amazonaws.com:8080"
+        Env7:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_USERNAME"
+              - "admin"
+        Env8:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_API_KEY"
+              - "112e4d2b5586eadead37c195927d76f0fa"
+        Env9:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_NAME"
+              - "Jenkins"
 Outputs:
-  UiLoadBalancerUrl:
-    Description:             "URL endpoint of the UI ALB"
-    Value:                   !GetAtt AppStack.Outputs.UiLoadBalancerUrl
+  ApiEndpoint:
+    Value:                           !GetAtt [ApiService, "Outputs.Endpoint"]
 
-  ApiLoadBalancerUrl:
-    Description:             "URL endpoint of the API ALB"
-    Value:                   !GetAtt AppStack.Outputs.ApiLoadBalancerUrl
+  UiEndpoint:
+    Value:                           !GetAtt [UiService, "Outputs.Endpoint"]
+
+  MongoDBEndpoint:
+    Value:                           !GetAtt [MongoDBService, "Outputs.Endpoint"]
