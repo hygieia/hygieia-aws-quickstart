@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-
-aws cloudformation package --s3-bucket hygieia-quickstart --region us-east-1 --template-file director.yml --output-template-file deploy.yml
