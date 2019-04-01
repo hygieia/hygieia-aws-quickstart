@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 
 STACK_NAME=Hygieia-Quickstart
-S3_BUCKET=hygieia-quckstart
+AWS_REGION=us-east-1
+S3_BUCKET=hygieia-quickstart
 DEPLOY_TEMPLATE=deploy.yml
 PARAMS_FILE=params.json
 
