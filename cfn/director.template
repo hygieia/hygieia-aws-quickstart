@@ -71,7 +71,7 @@ Resources:
   SecurityStack:
     Type:                            "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL:                   "security-stack.yml"
+      TemplateURL:                   "security.template"
       Parameters:
         ServiceName:                 !Ref ClusterName
         VpcId:                       !Ref VpcId
@@ -98,7 +98,7 @@ Resources:
   MongoDBService:
     Type:                            "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL:                   "fargate-micro-service.yml"
+      TemplateURL:                   "micro-service.template"
       Tags:
         - Key:                       Name
           Value:
@@ -146,7 +146,7 @@ Resources:
   UiService:
     Type:                            "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL:                   "fargate-micro-service.yml"
+      TemplateURL:                   "micro-service.template"
       Tags:
         - Key:                       Name
           Value:
@@ -187,7 +187,7 @@ Resources:
   ApiService:
     Type:                            "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL:                   "fargate-micro-service.yml"
+      TemplateURL:                   "micro-service.template"
       Tags:
         - Key:                       Name
           Value:
@@ -241,7 +241,7 @@ Resources:
   JenkinsCollector:
     Type:                            "AWS::CloudFormation::Stack"
     Properties:
-      TemplateURL:                   "fargate-micro-service.yml"
+      TemplateURL:                   "micro-service.template"
       Tags:
         - Key:                       Name
           Value:
