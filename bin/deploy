@@ -3,7 +3,7 @@
 STACK_NAME=Hygieia-Quickstart
 AWS_REGION=us-east-1
 S3_BUCKET=hygieia-quickstart
-DEPLOY_TEMPLATE=deploy.yml
+DEPLOY_TEMPLATE=deploy.template
 PARAMS_FILE=params.json
 
 CMD=$(cat <<EOF

@@ -4,8 +4,8 @@ STACK_NAME=Hygieia-Quickstart
 AWS_REGION=us-east-1
 CFN_DIR=cfn
 S3_BUCKET=hygieia-quickstart
-DIRECTOR_TEMPLATE=cfn/director.yml
-DEPLOY_TEMPLATE=deploy.yml
+DIRECTOR_TEMPLATE=cfn/director.template
+DEPLOY_TEMPLATE=deploy.template
 
 CMD=$(cat <<EOF
 aws cloudformation package            \
