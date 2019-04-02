@@ -118,6 +118,7 @@ Conditions:
   Env9Exist:                         !Not [ !Equals [!Ref Env9, '']]
   Env10Exist:                        !Not [ !Equals [!Ref Env10, '']]
   CreateLoadBalancerResourcesTrue:   !Equals [!Ref CreateLoadBalancerResources, "true"]
+  CreateLoadBalancerResourcesFalse:  !Not [ !Equals [!Ref CreateLoadBalancerResources, "true"]]
 
 Resources:
   TaskDefinition:
@@ -259,17 +260,38 @@ Resources:
     DependsOn:
       - LoadBalancer
 
-  Service:
+  NonLoadBalancedService:
     Type:                            AWS::ECS::Service
+    Condition:                       "CreateLoadBalancerResourcesFalse"
     Properties:
       LaunchType:                    "FARGATE"
       TaskDefinition:                !Ref TaskDefinition
       ServiceName:                   !Ref ServiceName
-      HealthCheckGracePeriodSeconds:
-        'Fn::If':
-          - CreateLoadBalancerResourcesTrue
-          - 300
-          - !Ref "AWS::NoValue"
+      DesiredCount:                  1
+      DeploymentConfiguration:
+        MaximumPercent:              200
+        MinimumHealthyPercent:       0
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp:            ENABLED
+          SecurityGroups:
+            - !Ref ContainerSG
+          Subnets:
+            - !Ref SubnetA
+            - !Ref SubnetB
+      ServiceRegistries:
+        - RegistryArn:               !GetAtt ServiceDiscovery.Arn
+          ContainerName:             !Ref ServiceName
+      Cluster:                       !Ref EcsCluster
+
+  LoadBalancedService:
+    Type:                            AWS::ECS::Service
+    Condition:                       "CreateLoadBalancerResourcesTrue"
+    Properties:
+      LaunchType:                    "FARGATE"
+      TaskDefinition:                !Ref TaskDefinition
+      ServiceName:                   !Ref ServiceName
+      HealthCheckGracePeriodSeconds: 300
       DesiredCount:                  1
       DeploymentConfiguration:
         MaximumPercent:              200
@@ -286,16 +308,12 @@ Resources:
         - RegistryArn:               !GetAtt ServiceDiscovery.Arn
           ContainerName:             !Ref ServiceName
       LoadBalancers:
-        'Fn::If':
-          - CreateLoadBalancerResourcesTrue
-          - - TargetGroupArn:        !Ref TargetGroup
-              ContainerPort:         !Ref ContainerPort
-              ContainerName:         !Ref ServiceName
-          - !Ref "AWS::NoValue"
+          - TargetGroupArn:          !Ref TargetGroup
+            ContainerPort:           !Ref ContainerPort
+            ContainerName:           !Ref ServiceName
       Cluster:                       !Ref EcsCluster
-    DependsOn:
-      - ListenerHTTP
-      
+    DependsOn:                       ListenerHTTP
+
   ServiceDiscovery:
     Type:                            AWS::ServiceDiscovery::Service
     Properties:
@@ -307,7 +325,7 @@ Resources:
         FailureThreshold:            1
 
 
-    # TODO:                          turn on alarms and cpu based scaling?
+# TODO:                              turn on alarms and cpu based scaling?
 #   # Enable autoscaling for this service
 #   ScalableTarget:
 #     Type:                          AWS::ApplicationAutoScaling::ScalableTarget
