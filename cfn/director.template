@@ -1,17 +1,15 @@
-Description:                         'Hygieia-Quickstart'
+Description:                         "Hygieia-Quickstart"
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      -
-        Label:
+      - Label:
           default:                   "Network Configuration"
         Parameters:
           - VpcId
           - SubnetA
           - SubnetB
-      -
-        Label:
+      - Label:
           default:                   "Service Configuration"
         Parameters:
           - ClusterName
@@ -28,9 +26,26 @@ Metadata:
         default:                     "ECS Cluster Name"
 
 Parameters:
+  CreateMongoDBService:
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+
+  MongoDBHost:
+    Type: String
+    Description: "Enter URL of MongoDB Host if CreateMongoDBService is not true"
+    Default: ""
+
+  MongoDBPort:
+    Type: String
+    Description: "What port is MongoDB running on?"
+    Default: "27017"
+
   VpcId:
     Type:                            "AWS::EC2::VPC::Id"
-    Description:                     Enter a valid VPC Id
+    Description:                     "Enter a valid VPC Id"
+
   ClusterName:
     Description:                     "The cluster name"
     Type:                            "String"
@@ -38,34 +53,45 @@ Parameters:
     MaxLength:                       "64"
     AllowedPattern:                  "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
     ConstraintDescription:           "Must begin with a letter and contain only alphanumeric characters."
+
   DatabaseUsername:
     AllowedPattern:                  "[a-zA-Z0-9]+"
-    ConstraintDescription:           must contain only alphanumeric characters.
-    Description:                     The database admin account user name.
-    MaxLength:                       '16'
-    MinLength:                       '1'
+    ConstraintDescription:           "must contain only alphanumeric characters."
+    Description:                     "The database admin account user name."
+    MaxLength:                       "16"
+    MinLength:                       "1"
     Type:                            String
+
   DatabasePassword:
     AllowedPattern:                  "^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)"
-    ConstraintDescription:           Must contain only alphanumeric characters with at least one capital letter and one number.
-    Description:                     The database admin account password.
-    MaxLength:                       '41'
-    MinLength:                       '8'
-    NoEcho:                          'true'
+    ConstraintDescription:           "Must contain only alphanumeric characters with at least one capital letter and one number."
+    Description:                     "The database admin account password."
+    MaxLength:                       "41"
+    MinLength:                       "8"
+    NoEcho:                          "true"
     Type:                            String
+
   DatabaseName:
     AllowedPattern:                  "[a-zA-Z0-9]+"
-    ConstraintDescription:           must contain only alphanumeric characters.
-    Description:                     The database name.
-    MaxLength:                       '64'
-    MinLength:                       '1'
+    ConstraintDescription:           "Must contain only alphanumeric characters."
+    Description:                     "The database name."
+    MaxLength:                       "64"
+    MinLength:                       "1"
     Type:                            String
+
   SubnetA:
     Type:                            "AWS::EC2::Subnet::Id"
-    Description:                     Enter a valid SubnetId of subnet in AZ1
+    Description:                     "Enter a valid SubnetId of subnet in AZ1"
+
   SubnetB:
     Type:                            "AWS::EC2::Subnet::Id"
-    Description:                     Enter a valid SubnetId of subnet in AZ2
+    Description:                     "Enter a valid SubnetId of subnet in AZ2"
+
+Conditions:
+  CreateMongoDBServiceTrue:
+    'Fn::Equals':
+      - !Ref "CreateMongoDBService"
+      - "true"
 
 Resources:
   SecurityStack:
@@ -76,7 +102,7 @@ Resources:
         ServiceName:                 !Ref ClusterName
         VpcId:                       !Ref VpcId
       Tags:
-        - Key:                       Name
+        - Key:                       "Name"
           Value:
             'Fn::Sub':
               - "${ClusterName}-${ServiceName}-Stack"
@@ -96,11 +122,12 @@ Resources:
       Name:                          "local"
 
   MongoDBService:
+    Condition:                       CreateMongoDBServiceTrue
     Type:                            "AWS::CloudFormation::Stack"
     Properties:
       TemplateURL:                   "micro-service.template"
       Tags:
-        - Key:                       Name
+        - Key:                       "Name"
           Value:
             'Fn::Sub':
               - "${ClusterName}-${ServiceName}-Stack"
@@ -119,7 +146,7 @@ Resources:
         ContainerCpu:                "2048"
         ContainerMemory:             "4GB"
         ContainerImage:              "excellalabs/mongo"
-        ContainerPort:               "27017"
+        ContainerPort:               !Ref MongoDBPort
         ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
         LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
         Env1:
@@ -148,7 +175,7 @@ Resources:
     Properties:
       TemplateURL:                   "micro-service.template"
       Tags:
-        - Key:                       Name
+        - Key:                       "Name"
           Value:
             Fn::Sub:
               - "${ClusterName}-${ServiceName}-Stack"
@@ -216,12 +243,15 @@ Resources:
           Fn::Join:
             - "="
             - - "SPRING_DATA_MONGODB_HOST"
-              - "mongodb.local"
+              - 'Fn::If':
+                - CreateMongoDBServiceTrue
+                - "mongodb.local"
+                - !Ref MongoDBHost
         Env2:
           Fn::Join:
             - "="
             - - "SPRING_DATA_MONGODB_PORT"
-              - "27017"
+              - !Ref MongoDBPort
         Env3:
           Fn::Join:
             - "="
@@ -269,7 +299,10 @@ Resources:
           'Fn::Join':
             - "="
             - - "MONGO_PORT"
-              - "tcp://mongodb.local:27017"
+              - 'Fn::If':
+                - CreateMongoDBServiceTrue
+                - !Sub "tcp://mongodb.local:${MongoDBPort}"
+                - !Sub "tcp://${MongoDBHost}:${MongoDBPort}"
         Env2:
           'Fn::Join':
             - "="
@@ -310,12 +343,23 @@ Resources:
             - "="
             - - "JENKINS_NAME"
               - "Jenkins"
+
 Outputs:
   ApiEndpoint:
-    Value:                           !GetAtt [ApiService, "Outputs.Endpoint"]
+    Value:
+      'Fn::GetAtt':
+        - ApiService
+        - "Outputs.Endpoint"
 
   UiEndpoint:
-    Value:                           !GetAtt [UiService, "Outputs.Endpoint"]
+    Value:
+      'Fn::GetAtt':
+        - UiService
+        - "Outputs.Endpoint"
 
   MongoDBEndpoint:
-    Value:                           !GetAtt [MongoDBService, "Outputs.Endpoint"]
+    Condition: CreateMongoDBServiceTrue
+    Value:
+      'Fn::GetAtt':
+        - MongoDBService
+        - "Outputs.Endpoint"
