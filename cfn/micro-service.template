@@ -293,7 +293,9 @@ Resources:
               ContainerName:         !Ref ServiceName
           - !Ref "AWS::NoValue"
       Cluster:                       !Ref EcsCluster
-
+    DependsOn:
+      - ListenerHTTP
+      
   ServiceDiscovery:
     Type:                            AWS::ServiceDiscovery::Service
     Properties:
