@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+STACK_NAME=Hygieia-Quickstart
+AWS_REGION=us-east-1
+S3_BUCKET=hygieia-quickstart
+PROPERTIES_FILE=deploy.properties
+
+CFN_DIR=cfn
+CAPABILITIES=CAPABILITY_NAMED_IAM
+PACKAGED_TEMPLATE=packaged.template
+DIRECTOR_TEMPLATE=director.template

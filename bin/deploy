@@ -1,20 +1,17 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-STACK_NAME=Hygieia-Quickstart
-AWS_REGION=us-east-1
-S3_BUCKET=hygieia-quickstart
-DEPLOY_TEMPLATE=deploy.template
-PARAMS_FILE=params.json
+script_dir="${0%/*}"
+source $script_dir/config
 
 CMD=$(cat <<EOF
 aws cloudformation deploy                 \
   --s3-bucket $S3_BUCKET                  \
   --region $AWS_REGION                    \
-  --template-file $DEPLOY_TEMPLATE        \
+  --template-file $PACKAGED_TEMPLATE      \
   --stack-name $STACK_NAME                \
-  --capabilities CAPABILITY_NAMED_IAM     \
+  --capabilities $CAPABILITIES            \
   --parameter-overrides                   \
-  $(cat deploy.properties)
+  $(cat $PROPERTIES_FILE)
 EOF
 )
 

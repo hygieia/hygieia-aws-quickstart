@@ -1,18 +1,14 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
-STACK_NAME=Hygieia-Quickstart
-AWS_REGION=us-east-1
-CFN_DIR=cfn
-S3_BUCKET=hygieia-quickstart
-DIRECTOR_TEMPLATE=cfn/director.template
-DEPLOY_TEMPLATE=deploy.template
+script_dir="${0%/*}"
+source $script_dir/config
 
 CMD=$(cat <<EOF
-aws cloudformation package            \
-  --s3-bucket $S3_BUCKET              \
-  --region $AWS_REGION                \
-  --template-file $DIRECTOR_TEMPLATE  \
-  --output-template-file $DEPLOY_TEMPLATE
+aws cloudformation package                     \
+  --s3-bucket $S3_BUCKET                       \
+  --region $AWS_REGION                         \
+  --template-file $CFN_DIR/$DIRECTOR_TEMPLATE  \
+  --output-template-file $PACKAGED_TEMPLATE
 EOF
 )
 
