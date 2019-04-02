@@ -1,2 +1,2 @@
-deploy.yml
-deploy.properties
+packaged.template
+*.properties
