@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 STACK_NAME=Hygieia-Quickstart
-AWS_REGION=us-east-1
 S3_BUCKET=hygieia-quickstart
+AWS_REGION=us-east-1
+
 PROPERTIES_FILE=deploy.properties
 
 CFN_DIR=cfn
