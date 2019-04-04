@@ -60,51 +60,73 @@ Parameters:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env2:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env3:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env4:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env5:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env6:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env7:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env8:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env9:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
 
   Env10:
     Type:                            String
     Description:                     An item of possible environment variables
     Default:                         ''
+    NoEcho:                          "true"
+
+  Env11:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env12:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
 
 Conditions:
   Env1Exist:                         !Not [ !Equals [!Ref Env1, '']]
@@ -117,6 +139,8 @@ Conditions:
   Env8Exist:                         !Not [ !Equals [!Ref Env8, '']]
   Env9Exist:                         !Not [ !Equals [!Ref Env9, '']]
   Env10Exist:                        !Not [ !Equals [!Ref Env10, '']]
+  Env11Exist:                        !Not [ !Equals [!Ref Env11, '']]
+  Env12Exist:                        !Not [ !Equals [!Ref Env12, '']]
   CreateLoadBalancerResourcesTrue:   !Equals [!Ref CreateLoadBalancerResources, "true"]
   CreateLoadBalancerResourcesFalse:  !Not [ !Equals [!Ref CreateLoadBalancerResources, "true"]]
 
@@ -196,6 +220,18 @@ Resources:
                   -
                     Name:            !Select [0, !Split ["=", !Ref Env10]]
                     Value:           !Select [1, !Split ["=", !Ref Env10]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env11Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env11]]
+                    Value:           !Select [1, !Split ["=", !Ref Env11]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env12Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env12]]
+                    Value:           !Select [1, !Split ["=", !Ref Env12]]
                   - !Ref "AWS::NoValue"
               - !Ref "AWS::NoValue"
           LogConfiguration:
@@ -323,7 +359,6 @@ Resources:
         NamespaceId:                 !Ref ServiceDiscoveryNamespace
       HealthCheckCustomConfig:
         FailureThreshold:            1
-
 
 # TODO:                              turn on alarms and cpu based scaling?
 #   # Enable autoscaling for this service
