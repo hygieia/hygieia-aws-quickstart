@@ -46,14 +46,8 @@ Get up and running with Hygieia quickly, with minimal fuss
 | DatabasePassword         |               | Yes                          | string |
 | DatabaseName             | dashboarddb   | No                           | string |
 
-At a minimum, the above properties should be set in `deploy.properties`.
+At a minimum, the required properties above should be set to deploy the Hygieia-Quickstart.
 
- <!---
- Not sure what you meant on line 49
- Maybe combine like "Create a `deploy.properties` file containing the above properties"
-OR
- ... "At a minimum, the required properties above should be set..."
- -->
 ### 3. Edit `bin/config` and start packaging/deploying
 
 Inside the included `bin/config`, a set of variables is defined. An existing S3 Bucket is required for deployment. You will need to set `bin/config` `S3_BUCKET` parameter to the name of your S3 Bucket. You can also edit the CloudFormation Stack Name through the `STACK_NAME` variable or the AWS Region via `AWS_REGION`, if desired.
@@ -147,7 +141,3 @@ DatabaseUsername=dashboarduser
 DatabasePassword=dbpAssword1
 DatabaseName=dashboarddb
 ```
-
- <!---
- changed line 154, dbpwd to reflect required values XD
- ---!>
