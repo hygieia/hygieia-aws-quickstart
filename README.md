@@ -46,7 +46,7 @@ Get up and running with Hygieia quickly, with minimal fuss
 | DatabasePassword         |               | Yes                          | string |
 | DatabaseName             | dashboarddb   | No                           | string |
 
-At a minimum, the above properties should be set in `deploy.properties`.
+At a minimum, the required properties above should be set to deploy the Hygieia-Quickstart.
 
 ### 3. Edit `bin/config` and start packaging/deploying
 
@@ -102,7 +102,7 @@ Note these options will have no effect unless their respective `CreateXXXXCollec
 
 ### Sample `deploy.properties` files
 
-#### Using an MongoDB Container:
+#### Using a MongoDB Container:
 
 ```
 ClusterName=Hygieia
@@ -138,6 +138,6 @@ SubnetB=subnet-fjbi20a3
 MongoDBHost=52.519.33.254
 MongoDBPort=27017
 DatabaseUsername=dashboarduser
-DatabasePassword=dbpassword
+DatabasePassword=dbpAssword1
 DatabaseName=dashboarddb
 ```
