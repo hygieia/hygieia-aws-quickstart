@@ -1,0 +1,16 @@
+.DS_Store
+.bundle/
+_site/
+
+#  Local .terraform directories
+intermediate/bootstrap/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+intermediate/bootstrap/*.tfstate
+intermediate/bootstrap/*.tfstate.*
+
+# .tfvars files
+*.tfvars
+intermediate/bootstrap/*.tfvars
