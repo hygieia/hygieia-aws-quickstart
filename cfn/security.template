@@ -1,0 +1,95 @@
+Description:                    "Hygieia-Quickstart - Security Stack"
+
+Parameters:
+  ServiceName:
+    Description :               "The service name"
+    Type:                       "String"
+    MinLength:                  "1"
+    MaxLength:                  "64"
+    AllowedPattern :            "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
+    ConstraintDescription :     "Must begin with a letter and contain only alphanumeric characters."
+
+  VpcId:
+    Type:                       "AWS::EC2::VPC::Id"
+
+Resources:
+  # A role needed by ECS
+  ExecutionRole:
+    Type:                       AWS::IAM::Role
+    Properties:
+      RoleName:                 !Sub "${ServiceName}ExecutionRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect:             "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+                - "ecs.amazonaws.com"
+                - "ec2.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole'
+
+  # A role for the containers
+  TaskRole:
+    Type:                       AWS::IAM::Role
+    Properties:
+      RoleName:                 !Sub "${ServiceName}TaskRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          -
+            Effect:             "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+
+  # A role needed for auto scaling
+  AutoScalingRole:
+    Type:                       AWS::IAM::Role
+    Properties:
+      RoleName:                 !Sub "${ServiceName}AutoScalingRole"
+      AssumeRolePolicyDocument:
+        Statement:
+          -
+            Effect:             "Allow"
+            Principal:
+              Service:
+                - "ecs-tasks.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole'
+
+  ContainerSG:
+    Type:                       AWS::EC2::SecurityGroup
+    Properties:
+      GroupName:                !Sub "${ServiceName}-SG"
+      GroupDescription:         "Allows traffic needed for Hygieia"
+      SecurityGroupIngress:
+        - IpProtocol:           tcp
+          FromPort:             80
+          ToPort:               80
+          CidrIp:               0.0.0.0/0
+        - IpProtocol:           tcp
+          FromPort:             8080
+          ToPort:               8080
+          CidrIp:               0.0.0.0/0
+        - IpProtocol:           tcp
+          FromPort:             27017
+          ToPort:               27017
+          CidrIp:               0.0.0.0/0
+      VpcId:                    !Ref VpcId
+
+Outputs:
+  ExecutionRole:
+    Value:                      !GetAtt ExecutionRole.Arn
+  TaskRole:
+    Value:                      !GetAtt TaskRole.Arn
+  AutoScalingRole:
+    Value:                      !GetAtt AutoScalingRole.Arn
+  ContainerSG:
+    Value:                      !GetAtt ContainerSG.GroupId

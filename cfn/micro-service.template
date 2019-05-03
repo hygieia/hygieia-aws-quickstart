@@ -1,0 +1,517 @@
+Description:                         'Micro-Service Stack'
+
+Parameters:
+  EcsCluster:
+    Type:                            "String"
+
+  CreateLoadBalancerResources:
+    Type:                            "String"
+    Default:                         "true"
+    AllowedValues:                   ["true", "false"]
+
+  ServiceDiscoveryNamespace:
+    Type:                            "String"
+
+  AutoScalingRole:
+    Type:                            "String"
+
+  ExecutionRole:
+    Type:                            "String"
+
+  ServiceName:
+    Type:                            "String"
+
+  SubnetA:
+    Type:                            "AWS::EC2::Subnet::Id"
+
+  SubnetB:
+    Type:                            "AWS::EC2::Subnet::Id"
+
+  TaskRole:
+    Type:                            "String"
+
+  ContainerCpu:
+    Type:                            "Number"
+
+  ContainerMemory:
+    Type:                            "String"
+    Description:                     "The size of allocated container memory (Gb)"
+
+  ContainerImage:
+    Type:                            "String"
+
+  ContainerPort:
+    Type:                            "Number"
+
+  ContainerSG:
+    Type:                            "AWS::EC2::SecurityGroup::Id"
+
+  LoadBalancerSG:
+    Type:                            "AWS::EC2::SecurityGroup::Id"
+
+  HealthCheckPath:
+    Type:                            "String"
+    Default:                         "/"
+
+  VpcId:
+    Type:                            "AWS::EC2::VPC::Id"
+
+  Env1:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env2:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env3:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env4:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env5:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env6:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env7:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env8:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env9:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env10:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env11:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+  Env12:
+    Type:                            String
+    Description:                     An item of possible environment variables
+    Default:                         ''
+    NoEcho:                          "true"
+
+Conditions:
+  Env1Exist:                         !Not [ !Equals [!Ref Env1, '']]
+  Env2Exist:                         !Not [ !Equals [!Ref Env2, '']]
+  Env3Exist:                         !Not [ !Equals [!Ref Env3, '']]
+  Env4Exist:                         !Not [ !Equals [!Ref Env4, '']]
+  Env5Exist:                         !Not [ !Equals [!Ref Env5, '']]
+  Env6Exist:                         !Not [ !Equals [!Ref Env6, '']]
+  Env7Exist:                         !Not [ !Equals [!Ref Env7, '']]
+  Env8Exist:                         !Not [ !Equals [!Ref Env8, '']]
+  Env9Exist:                         !Not [ !Equals [!Ref Env9, '']]
+  Env10Exist:                        !Not [ !Equals [!Ref Env10, '']]
+  Env11Exist:                        !Not [ !Equals [!Ref Env11, '']]
+  Env12Exist:                        !Not [ !Equals [!Ref Env12, '']]
+  CreateLoadBalancerResourcesTrue:   !Equals [!Ref CreateLoadBalancerResources, "true"]
+  CreateLoadBalancerResourcesFalse:  !Not [ !Equals [!Ref CreateLoadBalancerResources, "true"]]
+
+Resources:
+  TaskDefinition:
+    Type:                            "AWS::ECS::TaskDefinition"
+    Properties:
+      Family:                        !Sub "${EcsCluster}-${ServiceName}"
+      Cpu:                           !Ref ContainerCpu
+      Memory:                        !Ref ContainerMemory
+      NetworkMode:                   "awsvpc"
+      ExecutionRoleArn:              !Ref ExecutionRole
+      TaskRoleArn:                   !Ref TaskRole
+      RequiresCompatibilities:
+        - "FARGATE"
+      ContainerDefinitions:
+        - Name:                      !Ref ServiceName
+          Image:                     !Ref ContainerImage
+          PortMappings:
+            - ContainerPort:         !Ref ContainerPort
+          Environment:
+            'Fn::If':
+              - Env1Exist
+              -
+                - Name:              !Select [0, !Split ["=", !Ref Env1]]
+                  Value:             !Select [1, !Split ["=", !Ref Env1]]
+                - 'Fn::If':
+                  - Env2Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env2]]
+                    Value:           !Select [1, !Split ["=", !Ref Env2]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env3Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env3]]
+                    Value:           !Select [1, !Split ["=", !Ref Env3]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env4Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env4]]
+                    Value:           !Select [1, !Split ["=", !Ref Env4]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env5Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env5]]
+                    Value:           !Select [1, !Split ["=", !Ref Env5]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env6Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env6]]
+                    Value:           !Select [1, !Split ["=", !Ref Env6]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env7Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env7]]
+                    Value:           !Select [1, !Split ["=", !Ref Env7]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env8Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env8]]
+                    Value:           !Select [1, !Split ["=", !Ref Env8]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env9Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env9]]
+                    Value:           !Select [1, !Split ["=", !Ref Env9]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env10Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env10]]
+                    Value:           !Select [1, !Split ["=", !Ref Env10]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env11Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env11]]
+                    Value:           !Select [1, !Split ["=", !Ref Env11]]
+                  - !Ref "AWS::NoValue"
+                - 'Fn::If':
+                  - Env12Exist
+                  -
+                    Name:            !Select [0, !Split ["=", !Ref Env12]]
+                    Value:           !Select [1, !Split ["=", !Ref Env12]]
+                  - !Ref "AWS::NoValue"
+              - !Ref "AWS::NoValue"
+          LogConfiguration:
+            LogDriver:               "awslogs"
+            Options:
+              awslogs-region:        !Ref AWS::Region
+              awslogs-group:         !Ref LogGroup
+              awslogs-stream-prefix: "ecs"
+
+  LogGroup:
+    Type:                            AWS::Logs::LogGroup
+    Properties:
+      LogGroupName:                  !Sub "/ecs/hygieia/${ServiceName}/"
+
+  LoadBalancer:
+    Type:                            AWS::ElasticLoadBalancingV2::LoadBalancer
+    Condition:                       "CreateLoadBalancerResourcesTrue"
+    Properties:
+      Type:                          "application"
+      IpAddressType:                 "ipv4"
+      Scheme:                        "internet-facing"
+      SecurityGroups:
+        - !Ref LoadBalancerSG
+      Subnets:
+        - !Ref SubnetA
+        - !Ref SubnetB
+      Tags:
+        - Key:                       Name
+          Value:                     !Ref ServiceName
+
+  ListenerHTTP:
+    Type:                            AWS::ElasticLoadBalancingV2::Listener
+    Condition:                       "CreateLoadBalancerResourcesTrue"
+    Properties:
+      DefaultActions:
+        - TargetGroupArn:            !Ref TargetGroup
+          Type:                      forward
+      LoadBalancerArn:               !Ref LoadBalancer
+      Port:                          !Ref ContainerPort
+      Protocol:                      HTTP
+    DependsOn:
+      - LoadBalancer
+
+  TargetGroup:
+    Type:                            AWS::ElasticLoadBalancingV2::TargetGroup
+    Condition:                       "CreateLoadBalancerResourcesTrue"
+    Properties:
+      HealthCheckIntervalSeconds:    30
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath:               !Ref HealthCheckPath
+      HealthCheckTimeoutSeconds:     5
+      UnhealthyThresholdCount:       2
+      HealthyThresholdCount:         2
+      Name:                          !Sub "${ServiceName}-TG"
+      Port:                          !Ref ContainerPort
+      Protocol:                      HTTP
+      TargetGroupAttributes:
+        - Key:                       deregistration_delay.timeout_seconds
+          Value:                     60 # default is 300
+      TargetType:                    ip
+      VpcId:                         !Ref VpcId
+    DependsOn:
+      - LoadBalancer
+
+  NonLoadBalancedService:
+    Type:                            AWS::ECS::Service
+    Condition:                       "CreateLoadBalancerResourcesFalse"
+    Properties:
+      LaunchType:                    "FARGATE"
+      TaskDefinition:                !Ref TaskDefinition
+      ServiceName:                   !Ref ServiceName
+      DesiredCount:                  1
+      DeploymentConfiguration:
+        MaximumPercent:              200
+        MinimumHealthyPercent:       0
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp:            ENABLED
+          SecurityGroups:
+            - !Ref ContainerSG
+          Subnets:
+            - !Ref SubnetA
+            - !Ref SubnetB
+      ServiceRegistries:
+        - RegistryArn:               !GetAtt ServiceDiscovery.Arn
+          ContainerName:             !Ref ServiceName
+      Cluster:                       !Ref EcsCluster
+
+  LoadBalancedService:
+    Type:                            AWS::ECS::Service
+    Condition:                       "CreateLoadBalancerResourcesTrue"
+    Properties:
+      LaunchType:                    "FARGATE"
+      TaskDefinition:                !Ref TaskDefinition
+      ServiceName:                   !Ref ServiceName
+      HealthCheckGracePeriodSeconds: 300
+      DesiredCount:                  1
+      DeploymentConfiguration:
+        MaximumPercent:              200
+        MinimumHealthyPercent:       0
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp:            ENABLED
+          SecurityGroups:
+            - !Ref ContainerSG
+          Subnets:
+            - !Ref SubnetA
+            - !Ref SubnetB
+      ServiceRegistries:
+        - RegistryArn:               !GetAtt ServiceDiscovery.Arn
+          ContainerName:             !Ref ServiceName
+      LoadBalancers:
+          - TargetGroupArn:          !Ref TargetGroup
+            ContainerPort:           !Ref ContainerPort
+            ContainerName:           !Ref ServiceName
+      Cluster:                       !Ref EcsCluster
+    DependsOn:                       ListenerHTTP
+
+  ServiceDiscovery:
+    Type:                            AWS::ServiceDiscovery::Service
+    Properties:
+      Name:                          !Ref ServiceName
+      DnsConfig:
+        DnsRecords:                  [{Type: A, TTL: "10"}]
+        NamespaceId:                 !Ref ServiceDiscoveryNamespace
+      HealthCheckCustomConfig:
+        FailureThreshold:            1
+
+# TODO:                              turn on alarms and cpu based scaling?
+#   # Enable autoscaling for this service
+#   ScalableTarget:
+#     Type:                          AWS::ApplicationAutoScaling::ScalableTarget
+#     DependsOn:                     Service
+#     Properties:
+#       ServiceNamespace:            'ecs'
+#       ScalableDimension:           'ecs:service:DesiredCount'
+#       ResourceId:
+#         Fn::Join:
+#           - '/'
+#           - - service
+#             - Fn::ImportValue:     !Sub ${EnvironmentName}:ClusterName
+#             - !Ref 'ServiceName'
+#       MinCapacity:                 2
+#       MaxCapacity:                 10
+#       RoleARN:
+#         Fn::ImportValue:           !Sub ${EnvironmentName}:AutoscalingRole
+#
+#   # Create scaling policies for the service
+#   ScaleDownPolicy:
+#     Type:                          AWS::ApplicationAutoScaling::ScalingPolicy
+#     DependsOn:                     ScalableTarget
+#     Properties:
+#       PolicyName:
+#         Fn::Join:
+#           - '/'
+#           - - scale
+#             - !Ref 'EnvironmentName'
+#             - !Ref 'ServiceName'
+#             - down
+#       PolicyType:                  StepScaling
+#       ResourceId:
+#         Fn::Join:
+#           - '/'
+#           - - service
+#             - Fn::ImportValue:     !Sub ${EnvironmentName}:ClusterName
+#             - !Ref 'ServiceName'
+#       ScalableDimension:           'ecs:service:DesiredCount'
+#       ServiceNamespace:            'ecs'
+#       StepScalingPolicyConfiguration:
+#         AdjustmentType:            'ChangeInCapacity'
+#         StepAdjustments:
+#           - MetricIntervalUpperBound: 0
+#             ScalingAdjustment:     -1
+#         MetricAggregationType:     'Average'
+#         Cooldown:                  60
+#
+#   ScaleUpPolicy:
+#     Type:                          AWS::ApplicationAutoScaling::ScalingPolicy
+#     DependsOn:                     ScalableTarget
+#     Properties:
+#       PolicyName:
+#         Fn::Join:
+#           - '/'
+#           - - scale
+#             - !Ref 'EnvironmentName'
+#             - !Ref 'ServiceName'
+#             - up
+#       PolicyType:                  StepScaling
+#       ResourceId:
+#         Fn::Join:
+#           - '/'
+#           - - service
+#             - Fn::ImportValue:     !Sub ${EnvironmentName}:ClusterName
+#             - !Ref 'ServiceName'
+#       ScalableDimension:           'ecs:service:DesiredCount'
+#       ServiceNamespace:            'ecs'
+#       StepScalingPolicyConfiguration:
+#         AdjustmentType:            'ChangeInCapacity'
+#         StepAdjustments:
+#           - MetricIntervalLowerBound: 0
+#             MetricIntervalUpperBound: 15
+#             ScalingAdjustment:     1
+#           - MetricIntervalLowerBound: 15
+#             MetricIntervalUpperBound: 25
+#             ScalingAdjustment:     2
+#           - MetricIntervalLowerBound: 25
+#             ScalingAdjustment:     3
+#         MetricAggregationType:     'Average'
+#         Cooldown:                  60
+#
+#   # Create alarms to trigger these policies
+#   LowCpuUsageAlarm:
+#     Type:                          AWS::CloudWatch::Alarm
+#     Properties:
+#       AlarmName:
+#         Fn::Join:
+#           - '-'
+#           - - low-cpu
+#             - !Ref 'EnvironmentName'
+#             - !Ref 'ServiceName'
+#       AlarmDescription:
+#         Fn::Join:
+#           - ' '
+#           - - "Low CPU utilization for service"
+#             - !Ref 'ServiceName'
+#             - "in environment"
+#             - !Ref 'EnvironmentName'
+#       MetricName:                  CPUUtilization
+#       Namespace:                   AWS/ECS
+#       Dimensions:
+#         - Name:                    ServiceName
+#           Value:                   !Ref 'ServiceName'
+#         - Name:                    ClusterName
+#           Value:
+#             Fn::ImportValue:       !Sub ${EnvironmentName}:ClusterName
+#       Statistic:                   Average
+#       Period:                      60
+#       EvaluationPeriods:           1
+#       Threshold:                   20
+#       ComparisonOperator:          LessThanOrEqualToThreshold
+#       AlarmActions:
+#         - !Ref ScaleDownPolicy
+#
+#   HighCpuUsageAlarm:
+#     Type:                          AWS::CloudWatch::Alarm
+#     Properties:
+#       AlarmName:
+#         Fn::Join:
+#           - '-'
+#           - - high-cpu
+#             - !Ref 'EnvironmentName'
+#             - !Ref 'ServiceName'
+#       AlarmDescription:
+#         Fn::Join:
+#           - ' '
+#           - - "High CPU utilization for service"
+#             - !Ref 'ServiceName'
+#             - "in environment"
+#             - !Ref 'EnvironmentName'
+#       MetricName:                  CPUUtilization
+#       Namespace:                   AWS/ECS
+#       Dimensions:
+#         - Name:                    ServiceName
+#           Value:                   !Ref 'ServiceName'
+#         - Name:                    ClusterName
+#           Value:
+#             Fn::ImportValue:       !Sub ${EnvironmentName}:ClusterName
+#       Statistic:                   Average
+#       Period:                      60
+#       EvaluationPeriods:           1
+#       Threshold:                   70
+#       ComparisonOperator:          GreaterThanOrEqualToThreshold
+#       AlarmActions:
+# - !Ref ScaleUpPolicy
+
+Outputs:
+  Endpoint:
+    Description:                     "Load balancer DNS name or private service name"
+    Value:
+      'Fn::If':
+        - CreateLoadBalancerResourcesTrue
+        - !GetAtt LoadBalancer.DNSName
+        - !Sub "${ServiceName}.local"

@@ -1,0 +1,762 @@
+Description:                         "Hygieia-Quickstart"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default:                   "Network Configuration"
+        Parameters:
+          - VpcId
+          - SubnetA
+          - SubnetB
+      - Label:
+          default:                   "Service Configuration"
+        Parameters:
+          - ClusterName
+          - DatabaseUsername
+          - DatabasePassword
+    ParameterLabels:
+      VpcId:
+        default:                     "Which VPC should this be deployed to?"
+      SubnetA:
+        default:                     "Select first Subnet in first AZ"
+      SubnetB:
+        default:                     "Select second Subnet in second AZ"
+      ClusterName:
+        default:                     "ECS Cluster Name"
+
+Parameters:
+  CreateMongoDB:
+    Type:                            String
+    AllowedValues:
+      - "true"
+      - "false"
+
+  CreateJenkinsCollector:
+    Type:                            String
+    AllowedValues:
+      - "true"
+      - "false"
+
+  CreateSonarQubeCollector:
+    Type:                            String
+    AllowedValues:
+      - "true"
+      - "false"
+
+  CreateGitHubCollector:
+    Type:                            String
+    AllowedValues:
+      - "true"
+      - "false"
+
+  CreateJiraCollector:
+    Type:                            String
+    AllowedValues:
+      - "true"
+      - "false"
+
+  JenkinsHost:
+    Type:                            String
+    Default:                         ''
+
+  JenkinsUser:
+    Type:                            String
+    Default:                         ''
+
+  JenkinsApiKey:
+    Type:                            String
+    NoEcho:                          "true"
+    Default:                         ''
+
+  JenkinsServerName:
+    Type:                            String
+    Default:                         ''
+
+  SonarHost:
+    Type:                            String
+    Default:                         ''
+
+  SonarUser:
+    Type:                            String
+    Default:                         ''
+
+  SonarPassword:
+    Type:                            String
+    NoEcho:                          "true"
+    Default:                         ''
+
+  SonarMetrics:
+    Type:                            String
+    Default:                         ''
+
+  SonarVersion:
+    Type:                            String
+    Default:                         ''
+
+  GitHubHost:
+    Type:                            String
+    Default:                         ''
+
+  GitHubPersonalAccessToken:
+    Type:                            String
+    NoEcho:                          "true"
+    Default:                         ''
+
+  GitHubCommitThresholdDays:
+    Type:                            String
+    Default:                         ''
+
+  GitHubCommitThresholdDays:
+    Type:                            String
+    Default:                         ''
+
+  JiraHost:
+    Type:                            String
+    Default:                         ''
+
+  JiraCredentials:
+    Type:                            String
+    NoEcho:                          "true"
+    Default:                         ''
+
+  JiraSprintDataFieldName:
+    Type:                            String
+    Default:                         ''
+
+  JiraIssueTypeNames:
+    Type:                            String
+    Default:                         ''
+
+  JiraEpicFieldName:
+    Type:                            String
+    Default:                         ''
+
+  JiraStoryPointsFieldName:
+    Type:                            String
+    Default:                         ''
+
+  CollectorsCronSchedule:
+    Type:                            String
+    Default:                         "0 * * * * *"
+
+  ApiPort:
+    Type:                            String
+    Default:                         "8080"
+
+  MongoDBHost:
+    Type:                            String
+    Description:                     "Enter URL of MongoDB Host if CreateMongoDBService is not true"
+    Default:                         ""
+
+  MongoDBPort:
+    Type:                            String
+    Description:                     "What port is MongoDB running on?"
+    Default:                         "27017"
+
+  VpcId:
+    Type:                            "AWS::EC2::VPC::Id"
+    Description:                     "Enter a valid VPC Id"
+
+  ClusterName:
+    Description:                     "The cluster name"
+    Type:                            "String"
+    MinLength:                       "1"
+    MaxLength:                       "64"
+    AllowedPattern:                  "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
+    ConstraintDescription:           "Must begin with a letter and contain only alphanumeric characters."
+    Default:                         "Hygieia"
+
+  DatabaseUsername:
+    AllowedPattern:                  "[a-zA-Z0-9]+"
+    ConstraintDescription:           "must contain only alphanumeric characters."
+    Description:                     "The database admin account user name."
+    MaxLength:                       "16"
+    MinLength:                       "1"
+    Type:                            String
+    Default:                         "dashboarduser"
+
+  DatabasePassword:
+    AllowedPattern:                  "^(?=.*[0-9])(?=.*[a-zA-Z])([a-zA-Z0-9]+)"
+    ConstraintDescription:           "Must contain only alphanumeric characters with at least one capital letter and one number."
+    Description:                     "The database admin account password."
+    MaxLength:                       "41"
+    MinLength:                       "8"
+    NoEcho:                          "true"
+    Type:                            String
+
+  DatabaseName:
+    AllowedPattern:                  "[a-zA-Z0-9]+"
+    ConstraintDescription:           "Must contain only alphanumeric characters."
+    Description:                     "The database name."
+    MaxLength:                       "64"
+    MinLength:                       "1"
+    Type:                            String
+    Default:                         "dashboarddb"
+
+  SubnetA:
+    Type:                            "AWS::EC2::Subnet::Id"
+    Description:                     "Enter a valid SubnetId of subnet in AZ1"
+
+  SubnetB:
+    Type:                            "AWS::EC2::Subnet::Id"
+    Description:                     "Enter a valid SubnetId of subnet in AZ2"
+
+  ServiceNamespace:
+    Type:                            "String"
+    Default:                         "local"
+
+Conditions:
+  CreateMongoDBTrue:
+    'Fn::Equals':
+      - !Ref "CreateMongoDB"
+      - "true"
+
+  CreateJenkinsCollectorTrue:
+    'Fn::Equals':
+      - !Ref "CreateJenkinsCollector"
+      - "true"
+
+  CreateSonarQubeCollectorTrue:
+    'Fn::Equals':
+      - !Ref "CreateSonarQubeCollector"
+      - "true"
+
+  CreateGitHubCollectorTrue:
+    'Fn::Equals':
+      - !Ref "CreateGitHubCollector"
+      - "true"
+
+  CreateJiraCollectorTrue:
+    'Fn::Equals':
+      - !Ref "CreateJiraCollector"
+      - "true"
+
+Resources:
+  SecurityStack:
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "security.template"
+      Parameters:
+        ServiceName:                 !Ref ClusterName
+        VpcId:                       !Ref VpcId
+      Tags:
+        - Key:                       "Name"
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "Security"
+
+  EcsCluster:
+    Type:                            "AWS::ECS::Cluster"
+    Properties:
+      ClusterName:                   !Ref ClusterName
+    DependsOn:
+      - SecurityStack
+
+  ServiceDiscoveryNamespace:
+    Type:                            "AWS::ServiceDiscovery::PrivateDnsNamespace"
+    Properties:
+      Vpc:                           !Ref VpcId
+      Name:                          !Ref ServiceNamespace
+
+  MongoDBService:
+    Condition:                       CreateMongoDBTrue
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "micro-service.template"
+      Tags:
+        - Key:                       "Name"
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "MongoDB"
+      Parameters:
+        ServiceName:                 "MongoDB"
+        EcsCluster:                  !Ref EcsCluster
+        CreateLoadBalancerResources: "false"
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "2048"
+        ContainerMemory:             "4GB"
+        ContainerImage:              "excellalabs/mongo"
+        ContainerPort:               !Ref MongoDBPort
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        Env1:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_APPLICATION_DATABASE"
+              - !Ref DatabaseName
+        Env2:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_ADMIN_PASS"
+              - !Ref DatabasePassword
+        Env3:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_APPLICATION_USER"
+              - !Ref DatabaseUsername
+        Env4:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_APPLICATION_PASS"
+              - !Ref DatabasePassword
+
+  UiService:
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "micro-service.template"
+      Tags:
+        - Key:                       "Name"
+          Value:
+            Fn::Sub:
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "Ui"
+      Parameters:
+        ServiceName:                 "Ui"
+        EcsCluster:                  !Ref EcsCluster
+        CreateLoadBalancerResources: "true"
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "512"
+        ContainerMemory:             "2GB"
+        ContainerImage:              "singlestone/hygieia-ui:0.1.0"
+        ContainerPort:               "80"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        HealthCheckPath:             "/"
+        Env1:
+          Fn::Join:
+            - "="
+            - - "API_HOST"
+              - !Sub "api.${ServiceNamespace}"
+        Env2:
+          Fn::Join:
+            - "="
+            - - "API_PORT"
+              - !Ref ApiPort
+    DependsOn:
+      - EcsCluster
+
+  ApiService:
+    Type:                            "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL:                   "micro-service.template"
+      Tags:
+        - Key:                       Name
+          Value:
+            Fn::Sub:
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "API"
+      Parameters:
+        ServiceName:                 "API"
+        EcsCluster:                  !Ref EcsCluster
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        CreateLoadBalancerResources: "false"
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "1024"
+        ContainerMemory:             "2GB"
+        ContainerImage:              "singlestone/hygieia-api:0.1.0"
+        ContainerPort:               !Ref ApiPort
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        HealthCheckPath:             "/api/appinfo"
+        Env1:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_HOST"
+              - 'Fn::If':
+                - CreateMongoDBTrue
+                - !Sub "mongodb.${ServiceNamespace}"
+                - !Ref MongoDBHost
+        Env2:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_PORT"
+              - !Ref MongoDBPort
+        Env3:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_USERNAME"
+              - !Ref DatabaseUsername
+        Env4:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_PASSWORD"
+              - !Ref DatabasePassword
+        Env5:
+          Fn::Join:
+            - "="
+            - - "SPRING_DATA_MONGODB_DATABASE"
+              - !Ref DatabaseName
+
+  JenkinsCollector:
+    Type:                            "AWS::CloudFormation::Stack"
+    Condition:                       "CreateJenkinsCollectorTrue"
+    Properties:
+      TemplateURL:                   "micro-service.template"
+      Tags:
+        - Key:                       Name
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "JenkinsCollector"
+      Parameters:
+        ServiceName:                 "JenkinsCollector"
+        EcsCluster:                  !Ref EcsCluster
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        CreateLoadBalancerResources: "false"
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "256"
+        ContainerMemory:             "1GB"
+        ContainerImage:              "singlestone/hygieia-jenkins-collector:0.1.0"
+        ContainerPort:               "8080"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        Env1:
+          'Fn::Join':
+            - "="
+            - - "MONGO_PORT"
+              - 'Fn::If':
+                - CreateMongoDBTrue
+                - !Sub "tcp://mongodb.${ServiceNamespace}:${MongoDBPort}"
+                - !Sub "tcp://${MongoDBHost}:${MongoDBPort}"
+        Env2:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_USERNAME"
+              - !Ref DatabaseUsername
+        Env3:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_PASSWORD"
+              - !Ref DatabasePassword
+        Env4:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_DATABASE"
+              - !Ref DatabaseName
+        Env5:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_CRON"
+              - !Ref CollectorsCronSchedule
+        Env6:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_MASTER"
+              - !Ref JenkinsHost
+        Env7:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_USERNAME"
+              - !Ref JenkinsUser
+        Env8:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_API_KEY"
+              - !Ref JenkinsApiKey
+        Env9:
+          'Fn::Join':
+            - "="
+            - - "JENKINS_NAME"
+              - !Ref JenkinsServerName
+
+  SonarQubeCollector:
+    Type:                            "AWS::CloudFormation::Stack"
+    Condition:                       "CreateSonarQubeCollectorTrue"
+    Properties:
+      TemplateURL:                   "micro-service.template"
+      Tags:
+        - Key:                       Name
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "SonarQubeCollector"
+      Parameters:
+        ServiceName:                 "SonarQubeCollector"
+        EcsCluster:                  !Ref EcsCluster
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        CreateLoadBalancerResources: "false"
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "256"
+        ContainerMemory:             "1GB"
+        ContainerImage:              "singlestone/hygieia-sonarqube-collector:0.1.0"
+        ContainerPort:               "8080"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        Env1:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_HOST"
+              - 'Fn::If':
+                - CreateMongoDBTrue
+                - !Sub "mongodb.${ServiceNamespace}"
+                - !Ref MongoDBHost
+        Env2:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_PORT"
+              - !Ref MongoDBPort
+        Env3:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_PASSWORD"
+              - !Ref DatabasePassword
+        Env4:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_DATABASE"
+              - !Ref DatabaseName
+        Env5:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_USERNAME"
+              - !Ref DatabaseUsername
+        Env6:
+          'Fn::Join':
+            - "="
+            - - "SONAR_CRON"
+              - !Ref CollectorsCronSchedule
+        Env7:
+          'Fn::Join':
+            - "="
+            - - "SONAR_USERNAME"
+              - !Ref SonarUser
+        Env8:
+          'Fn::Join':
+            - "="
+            - - "SONAR_PASSWORD"
+              - !Ref SonarPassword
+        Env9:
+          'Fn::Join':
+            - "="
+            - - "SONAR_METRICS"
+              - !Ref SonarMetrics
+        Env10:
+          'Fn::Join':
+            - "="
+            - - "SONAR_URL"
+              - !Ref SonarHost
+
+        Env11:
+          'Fn::Join':
+            - "="
+            - - "SONAR_VERSION"
+              - !Ref SonarVersion
+
+  GitHubCollector:
+    Type:                            "AWS::CloudFormation::Stack"
+    Condition:                       "CreateGitHubCollectorTrue"
+    Properties:
+      TemplateURL:                   "micro-service.template"
+      Tags:
+        - Key:                       Name
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "GitHubCollector"
+      Parameters:
+        ServiceName:                 "GitHubCollector"
+        EcsCluster:                  !Ref EcsCluster
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        CreateLoadBalancerResources: "false"
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "256"
+        ContainerMemory:             "1GB"
+        ContainerImage:              "singlestone/hygieia-github-collector:0.1.0"
+        ContainerPort:               "8080"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        Env1:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_HOST"
+              - 'Fn::If':
+                - CreateMongoDBTrue
+                - !Sub "mongodb.${ServiceNamespace}"
+                - !Ref MongoDBHost
+        Env2:
+          'Fn::Join':
+            - "="
+            - - "MONGODB_PORT"
+              - !Ref MongoDBPort
+        Env3:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_PASSWORD"
+              - !Ref DatabasePassword
+        Env4:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_DATABASE"
+              - !Ref DatabaseName
+        Env5:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_USERNAME"
+              - !Ref DatabaseUsername
+        Env6:
+          'Fn::Join':
+            - "="
+            - - "GITHUB_CRON"
+              - !Ref CollectorsCronSchedule
+        Env7:
+          'Fn::Join':
+            - "="
+            - - "GITHUB_HOST"
+              - !Ref GitHubHost
+        Env8:
+          'Fn::Join':
+            - "="
+            - - "GITHUB_COMMIT_THRESHOLD_DAYS"
+              - !Ref GitHubCommitThresholdDays
+        Env9:
+          'Fn::Join':
+            - "="
+            - - "PERESONAL_ACCESS_TOKEN"
+              - !Ref GitHubPersonalAccessToken
+
+  JiraCollector:
+    Type:                            "AWS::CloudFormation::Stack"
+    Condition:                       "CreateJiraCollectorTrue"
+    Properties:
+      TemplateURL:                   "micro-service.template"
+      Tags:
+        - Key:                       Name
+          Value:
+            'Fn::Sub':
+              - "${ClusterName}-${ServiceName}-Stack"
+              - ServiceName:         "JiraCollector"
+      Parameters:
+        ServiceName:                 "JiraCollector"
+        EcsCluster:                  !Ref EcsCluster
+        ServiceDiscoveryNamespace:   !Ref ServiceDiscoveryNamespace
+        CreateLoadBalancerResources: "false"
+        AutoScalingRole:             !GetAtt SecurityStack.Outputs.AutoScalingRole
+        ExecutionRole:               !GetAtt SecurityStack.Outputs.ExecutionRole
+        SubnetA:                     !Ref SubnetA
+        SubnetB:                     !Ref SubnetB
+        TaskRole:                    !GetAtt SecurityStack.Outputs.TaskRole
+        VpcId:                       !Ref VpcId
+        ContainerCpu:                "256"
+        ContainerMemory:             "1GB"
+        ContainerImage:              "singlestone/hygieia-jira-collector:0.1.0"
+        ContainerPort:               "8080"
+        ContainerSG:                 !GetAtt SecurityStack.Outputs.ContainerSG
+        LoadBalancerSG:              !GetAtt SecurityStack.Outputs.ContainerSG
+        Env1:
+          'Fn::Join':
+            - "="
+            - - "MONGO_PORT"
+              - 'Fn::If':
+                - CreateMongoDBTrue
+                - !Sub "tcp://mongodb.${ServiceNamespace}:${MongoDBPort}"
+                - !Sub "tcp://${MongoDBHost}:${MongoDBPort}"
+        Env2:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_PASSWORD"
+              - !Ref DatabasePassword
+        Env3:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_DATABASE"
+              - !Ref DatabaseName
+        Env4:
+          'Fn::Join':
+            - "="
+            - - "HYGIEIA_API_ENV_SPRING_DATA_MONGODB_USERNAME"
+              - !Ref DatabaseUsername
+        Env5:
+          'Fn::Join':
+            - "="
+            - - "JIRA_CRON"
+              - !Ref CollectorsCronSchedule
+        Env6:
+          'Fn::Join':
+            - "="
+            - - "JIRA_BASE_URL"
+              - !Ref JiraHost
+        Env7:
+          'Fn::Join':
+            - "="
+            - - "JIRA_CREDENTIALS"
+              - !Ref JiraCredentials
+        Env8:
+          'Fn::Join':
+            - "="
+            - - "JIRA_TEAM_FIELD_NAME"
+              - ''
+        Env9:
+          'Fn::Join':
+            - "="
+            - - "JIRA_SPRINT_DATA_FIELD_NAME"
+              - !Ref JiraSprintDataFieldName
+        Env10:
+          'Fn::Join':
+            - "="
+            - - "JIRA_STORY_POINTS_FIELD_NAME"
+              - !Ref JiraStoryPointsFieldName
+        Env11:
+          'Fn::Join':
+            - "="
+            - - "JIRA_ISSUE_TYPE_NAMES"
+              - !Ref JiraIssueTypeNames
+        Env12:
+          'Fn::Join':
+            - "="
+            - - "JIRA_EPIC_FIELD_NAME"
+              - !Ref JiraEpicFieldName
+
+Outputs:
+  ApiEndpoint:
+    Value:
+      'Fn::GetAtt':
+        - ApiService
+        - "Outputs.Endpoint"
+
+  UiEndpoint:
+    Value:
+      'Fn::GetAtt':
+        - UiService
+        - "Outputs.Endpoint"
+
+  MongoDBEndpoint:
+    Condition:                       CreateMongoDBTrue
+    Value:
+      'Fn::GetAtt':
+        - MongoDBService
+        - "Outputs.Endpoint"

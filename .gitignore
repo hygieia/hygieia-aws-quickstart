@@ -1,3 +1,5 @@
+packaged.template
+deploy.properties
 .DS_Store
 .bundle/
 _site/
