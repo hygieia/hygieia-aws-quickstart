@@ -1,143 +1,44 @@
-# hygieia-quickstart
+# Hygieia Quick Start
 
-Get up and running with Hygieia quickly, with minimal fuss
+This guide helps you get [Hygieia](https://hygieia.github.io/Hygieia/getting_started.html) up and running quickly. The default configuration is deployed to AWS and capable of supporting up to 100 team dashboards out of the box. Support for additional cloud providers may be added in the future.
 
-# Project Structure
+Before you start you will need the following a computer with a [Git client](https://git-scm.com/downloads) installed. In addition:
 
-```
-        .
-        ├── bin                           # Scripts used for quickstart
-        │   ├── config                    # User specified properties
-        │   ├── delete
-        │   ├── deploy
-        │   └── package
-        ├── cfn                           # CloudFormation templates
-        │   ├── director.template
-        │   ├── micro-service.template
-        │   └── security.template
-        ├── deploy.properties             # User specified properties
-        ├── LICENSE
-        ├── packaged.template             # Created by bin/package
-        └── README.md
-```
+For AWS:
+1. An [AWS Account](https://aws.amazon.com/account/) with permissions to create IAM roles and run CloudFormation
+1. An [AWS Command Line Interface (CLI)](https://aws.amazon.com/cli/) installed and connected to your AWS account
+1. An [AWS S3 bucket](https://aws.amazon.com/s3/) in your account for storing the CloudFormation code
 
-## Quickstart Steps
 
-### 1.  Clone this repository to a machine configured to access to your AWS Account via AWS CLI.
+### Step 1: Install MongoDB
 
-```
-        $ git clone https://github.com/singlestone/hygieia-quickstart.git
-        $ cd hygieia-quickstart
-```
+The first thing you need with Hygieia is a MongoDB database to store the data displayed in the dashboards. We recommend following the [AWS MongoDB Quick Start](https://aws.amazon.com/quickstart/architecture/mongodb/) to setup your database. This secure implementation takes about 15 minutes to setup via CloudFormation and can run inside an existing VPC or one it creates. Once done, your environment will look like this.
 
-### 2.  Create a `deploy.properties` file
+![Figure 1](images/aws_quickstart_mongodb.png)
 
-| Property                 | Default Value | Required?                    | Type?  |
-| ------------------------ | ------------- | ---------------------------- | ------ |
-| ClusterName              | Hygieia       | No                           | string |
-| CreateMongoDB            |               | Yes                          | bool   |
-| CreateJenkinsCollector   |               | Yes                          | bool   |
-| CreateSonarQubeCollector |               | Yes                          | bool   |
-| CreateGitHubCollector    |               | Yes                          | bool   |
-| CreateJiraCollector      |               | Yes                          | bool   |
-| MongoDBHost              |               | Yes if `CreateMongoDB=false` | string |
-| MongoDBPort              | 27017         | No                           | string |
-| DatabaseUsername         | dashboarduser | No                           | string |
-| DatabasePassword         |               | Yes                          | string |
-| DatabaseName             | dashboarddb   | No                           | string |
 
-At a minimum, the required properties above should be set to deploy the Hygieia-Quickstart.
+### Step 2: Install Hygieia
 
-### 3. Edit `bin/config` and start packaging/deploying
+1. Clone this repo locally
+1. Modify the [deploy.properties](deploy.properties) file to provide your environment-specific settings.
+1. Modify the [bin/config](bin/config) file to provide your environment-specific settings.
+1. Package CloudFormation and upload to S3 by running the package command from the root directory: ```$ bin/package```
+1. Launch Hygieia in AWS by running the deploy command from the root directory: ```$ bin/deploy```
 
-Inside the included `bin/config`, a set of variables is defined. An existing S3 Bucket is required for deployment. You will need to set `bin/config` `S3_BUCKET` parameter to the name of your S3 Bucket. You can also edit the CloudFormation Stack Name through the `STACK_NAME` variable or the AWS Region via `AWS_REGION`, if desired.
+The deploy command creates a new CloudFormation stack named ```Hygieia-Quickstart``` by default. When done your environment will look like this.
 
-Now that `bin/config` is updated, we can run
+![Figure 2](images/aws_quickstart_hygieia.png)
 
-```
-$ bin/package
-```
+At this point the Hygieia UI server, API server and a set of collectors should be deployed and running. All of them should be connected to the database created in step 1.
 
-This will run `aws cloudformation package`, which will package our local artifacts and push them to the S3 Bucket defined in `bin/config`. This also produces a file called `packaged.template` which is deployed in the next step.
 
-### 4. Deploy
+### Step 3: Configure Hygieia
 
-```
-$ bin/deploy
-```
+In order to start collecting data within your environment, collectors need to have connection information to source systems such as Jenkins, Jira, Sonar or GitHub.
 
-This script will run `aws cloudformation deploy` and pass in your properties from `deploy.properties`. A changeset will be created and a CloudFormation stack will be created/updated.
+1. Follow the [Hygieia instructions to create an Admin user](https://hygieia.github.io/Hygieia/signup.html).
+1. Open a browser and login to the Hygieia UI Server as the Admin server at ```http://```
+1. You can configure the collectors via UI Server (cog icon in top right) **OR** you can configure them in [deploy.properties](deploy.properties). Note: In order to configure a collector, the ```CreateXXXXCollector``` property in [deploy.properties](deploy.properties) must be set to true.
+1. Follow the [Hygieia instructions to create a Team Dashboard](https://hygieia.github.io/Hygieia/create_team_dashboard.html).
 
-### 5. Collector Config
-
-Any collectors that were deployed can be configured through the Hygieia Administrator UI (accessed via cog in top right corner of browser--shown when logged in as 'admin'). The first user created with name 'admin' is the administrator user. You can create this user using the sign-up functionality of the Hygieia UI.
-
-These collectors can also be configured through the `deploy.properties` file. The currently configurable options are listed below:
-
-```
-JenkinsHost
-JenkinsUser
-JenkinsApiKey
-JenkinsServerName
-
-SonarUser
-SonarPassword
-SonarHost
-SonarMetrics
-SonarVersion
-
-GitHubHost
-GitHubPersonalAccessToken
-GitHubCommitThresholdDays
-
-JiraHost
-JiraCredentials
-JiraSprintDataFieldName
-JiraStoryPointsFieldName
-JiraIssueTypeNames
-JiraEpicFieldName
-```
-
-Note these options will have no effect unless their respective `CreateXXXXCollector` is set `true`.
-
-### Sample `deploy.properties` files
-
-#### Using a MongoDB Container:
-
-```
-ClusterName=Hygieia
-CreateMongoDB=true
-CreateJenkinsCollector=true
-CreateSonarQubeCollector=true
-CreateGitHubCollector=false
-CreateJiraCollector=false
-
-VpcId=vpc-fba03cae
-SubnetA=subnet-bb234059
-SubnetB=subnet-fjbi20a3
-
-DatabaseUsername=dashboarduser
-DatabasePassword=dbpassword
-DatabaseName=dashboarddb
-```
-
-#### Using an external MongoDB instance/cluster:
-
-```
-ClusterName=Hygieia
-CreateMongoDB=false
-CreateJenkinsCollector=true
-CreateSonarQubeCollector=true
-CreateGitHubCollector=false
-CreateJiraCollector=false
-
-VpcId=vpc-fba03cae
-SubnetA=subnet-bb234059
-SubnetB=subnet-fjbi20a3
-
-MongoDBHost=52.519.33.254
-MongoDBPort=27017
-DatabaseUsername=dashboarduser
-DatabasePassword=dbpAssword1
-DatabaseName=dashboarddb
-```
+At this point you should have your first Team Dashboard up and running!
