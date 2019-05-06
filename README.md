@@ -19,11 +19,11 @@ The first thing you need with Hygieia is a MongoDB database to store the data di
 
 ### Step 2: Install Hygieia
 
-1. Clone this repo locally
-1. Modify the [deploy.properties](deploy.properties) file to provide your environment-specific settings.
-1. Modify the [bin/config](bin/config) file to provide your environment-specific settings.
-1. Package CloudFormation and upload to S3 by running the package command from the root directory: ```$ bin/package```
-1. Launch Hygieia in AWS by running the deploy command from the root directory: ```$ bin/deploy```
+1. Clone this repo locally and ```cd hygieia-quickstart``` to the project root directory.
+1. Modify the [deploy.properties](deploy.properties) file to provide your environment-specific Hygieia settings.
+1. Modify the [bin/config](bin/config) file to provide your environment-specific package and deploy settings.
+1. From the root directory, run ```$ bin/package```. This merges your deploy.properties settings and generates CloudFormation files that are uploaded to S3.
+1. From the root directory, run ```$ bin/deploy```. This runs CloudFormation that launches Hygieia in AWS. 
 
 The deploy command creates a new CloudFormation stack named ```Hygieia-Quickstart``` by default. When done your environment will look like this.
 
