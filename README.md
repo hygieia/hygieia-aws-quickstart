@@ -26,7 +26,7 @@ The first thing you need with Hygieia is a MongoDB database to store the data. W
 
 1. Clone or download this repo locally and change to the project root directory ```cd hygieia-quickstart```.
 1. Create a new file named ```deploy.properties``` by copying the existing [example.properties](example.properties). Modify this file to provide your environment-specific Hygieia settings and save when done.
-1. Modify the [bin/config](bin/config) file to provide the location of your S3 bucket and save when done. Optionally modify the AWS region and Stack name.
+1. Modify the [bin/config](bin/config) file to provide the name of your S3 bucket and save when done. Optionally modify the AWS region and Stack name.
 1. From the root directory, run the command ```bin/package```. This merges your ```deploy.properties``` settings and generates CloudFormation files that are uploaded to S3 bucket defined in ```bin/config```.
 1. From the root directory, run the command ```bin/deploy```. This runs CloudFormation that provisions Hygieia in AWS and starts the services.
 
@@ -53,4 +53,4 @@ If all went well you should have your first Team Dashboard up and running. Congr
 
 ### Feedback
 
-If you find something unclear or have an idea for an improvement, please let us know by creating a new issue. 
+If you find something unclear or have an idea for an improvement, please let us know by creating a new issue.
