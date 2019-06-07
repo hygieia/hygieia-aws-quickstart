@@ -6,7 +6,7 @@ S3_BUCKET=hygieia-quickstart
 # The AWS region Hygieia will be deployed to
 AWS_REGION=us-east-1
 
-# The CloudFormation Stack name associated with Hygieia 
+# The CloudFormation Stack name associated with Hygieia
 STACK_NAME=Hygieia-Quickstart
 
 
