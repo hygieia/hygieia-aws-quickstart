@@ -57,5 +57,15 @@ In order to start collecting data within your environment, collectors need to ha
 
 If all went well you should have your first Team Dashboard up and running. Congrats!
 
+## Costs
+
+This quick start costs approximately $200 per month to run in AWS, making some assumptions for user traffic and data storage capacity. The costs primarily result from:
+
+1. MongoDB: 1 x m4.large EC2 instance
+1. Hygieia: 1 x Application Load Balancer (ALB)
+1. Hygieia: 1 x m4.large (~7 ECS Fargate Containers)
+
+The more collectors you enable and the more data you gather, the larger the MongoDB data storage costs.
+
 ## Feedback
 If you find something unclear or have an idea for an improvement, please let us know by creating a new issue.
