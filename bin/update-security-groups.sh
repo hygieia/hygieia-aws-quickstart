@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Updates the "MongoDBServerSecurityGroup" to give Hygieia ECS services access to MongoDB.
 
