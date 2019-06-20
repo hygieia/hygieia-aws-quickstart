@@ -33,14 +33,14 @@ Once done, your environment will look like this:
   - `VpcId` (specific to your AWS environment)
   - `MongoDBHost` (this will be the private IP address of the MongoDB EC2 instance created in step 1)
   - `DatabasePassword` (this will be the password you provided in step 1)
-1. Modify the [bin/config](bin/config) file to provide the name of your S3 bucket and save when done. Optionally modify the AWS region and Stack name.
-1. From the root directory, run the command `bin/package`. This merges your `deploy.properties` settings and generates CloudFormation files that are uploaded to S3 bucket defined in `bin/config`.
-1. From the root directory, run the command `bin/deploy`. This runs CloudFormation that provisions Hygieia in AWS and starts the services.
+1. Modify the [bin/config.sh](bin/config.sh) file to provide the name of your S3 bucket and save when done. Optionally modify the AWS region and Stack name.
+1. From the root directory, run the command `bin/package.sh`. This merges your `deploy.properties` settings and generates CloudFormation files that are uploaded to S3 bucket defined in `bin/config.sh`.
+1. From the root directory, run the command `bin/deploy.sh`. This runs CloudFormation that provisions Hygieia in AWS and starts the services.
 
 The deploy command takes about 3-4 minutes to run and creates a new CloudFormation stack named `Hygieia-Quickstart` by default. Outputs of the command include the URL of the new load balancer. Make note of it as this will be how you connect to the UI Server in the next step.
 
 ### Update Security Groups
-Once the stack has finished creating, run the `update-security-groups.sh` script to allow Hygieia services to access MongoDB.
+Once the stack has finished creating, run the `bin/update-security-groups.sh` script to allow Hygieia services to access MongoDB.
 
 When done your environment will look like this.
 ![Figure 2](images/aws_quickstart_hygieia.png)
@@ -52,7 +52,7 @@ In order to start collecting data within your environment, collectors need to ha
 
 1. Follow the [Hygieia instructions to create an Admin user](https://hygieia.github.io/Hygieia/signup.html).
 1. Open a browser and using the URL from step 2, login to your Hygieia UI Server as the Admin server.
-1. Configure the installed collectors via the UI Server (cog icon in top right, then "General"). Note: In order to configure a collector, the `CreateXXXXCollector` property in `deploy.properties` must be set to true. If you'd prefer, you can set collector configuration information in `deploy.properties` and re-run the `bin/package` and `bin/deploy` commands.
+1. Configure the installed collectors via the UI Server (cog icon in top right, then "General"). Note: In order to configure a collector, the `CreateXXXXCollector` property in `deploy.properties` must be set to true. If you'd prefer, you can set collector configuration information in `deploy.properties` and re-run the `bin/package.sh` and `bin/deploy.sh` commands.
 1. Follow the [Hygieia instructions to create a Team Dashboard](https://hygieia.github.io/Hygieia/create_team_dashboard.html).
 
 If all went well you should have your first Team Dashboard up and running. Congrats!
@@ -61,9 +61,9 @@ If all went well you should have your first Team Dashboard up and running. Congr
 
 This quick start costs approximately $200 per month to run in AWS, making some assumptions for user traffic and data storage capacity. The costs primarily result from:
 
-1. MongoDB: 1 x m4.large EC2 instance
-1. Hygieia: 1 x Application Load Balancer (ALB)
-1. Hygieia: 1 x m4.large (~7 ECS Fargate Containers)
+1. MongoDB: 1 × m4.large EC2 instance
+1. Hygieia: 1 × Application Load Balancer (ALB)
+1. Hygieia: 1 × m4.large (~7 ECS Fargate Containers)
 
 The more collectors you enable and the more data you gather, the larger the MongoDB data storage costs.
 
