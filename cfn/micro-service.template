@@ -309,7 +309,7 @@ Resources:
         MinimumHealthyPercent:       0
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp:            ENABLED
+          AssignPublicIp:            DISABLED
           SecurityGroups:
             - !Ref ContainerSG
           Subnets:
@@ -334,7 +334,7 @@ Resources:
         MinimumHealthyPercent:       0
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp:            ENABLED
+          AssignPublicIp:            DISABLED
           SecurityGroups:
             - !Ref ContainerSG
           Subnets:
