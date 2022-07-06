@@ -1,3 +1,4 @@
+## Due to change in priorities and lack of activity, this repo is currently not being supported and is archived as of 07/06/22. Please note since archival, the project is not maintained and will be available in a read-only state. Please reach out to hygieia2@capitalone.com should you have any questions.
 # Hygieia Quick Start
 This repo is a companion to the [Hygieia](https://hygieia.github.io/) project with a goal of helping you get an initial Hygieia installation up and running quickly within about an hour. The initial configuration is deployed to AWS and capable of supporting about 100 team dashboards out of the box in a secure manner for about $200 a month in AWS hosting costs.
 
